@@ -18,16 +18,16 @@ No need to explain how to install these :-), but here some shortcuts:
 ## Deployment 
 
 Clone the git repo with helm charts (here master is used -> Need to check whether there are recommended branches)
-'''
+```
 git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
-'''
+```
 
 ### Tuning
 
 Each NF is associated with a values.yaml file which stores parameters for the deployment.
 Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
 
-'''
+```
 config:
   mountConfig: false          #If config file is mounted then please edit mount.conf in configmap.yaml properly
   timeZone: "Europe/Paris"
@@ -52,14 +52,14 @@ cate with amf
   f1cuPort: "2153"
   f1duPort: "2153"
   useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
-'''
+```
 
 ### ???later
 
 Create a dediated k8s ns
-'''
+```
 kubectl create ns oai-tutorial
-'''
+```
 
 
 
