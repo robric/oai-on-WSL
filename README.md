@@ -4,20 +4,14 @@ Note on the deployment of OAI on windows WSL. Since we're in an environemnt with
 
 Most information is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links.
 
-# Deployment
+## Deployment Minikube + Basic Core + gNB RF simulated
 
-## Preparation
+### Preparation
 
-You need to install
-- Kubernetees
-- Helm 
-- Helm Spray. 
-
-No need to explain how to install these :-), but here some shortcuts: 
-- Ubuntu install for helm: https://helm.sh/docs/intro/install/
-- Run the following command "helm plugin install https://github.com/ThalesGroup/helm-spray"
-
-## Deployment 
+Install the following:
+- Kubernetees (minikube here) => https://minikube.sigs.k8s.io/docs/start/
+- Helm =>  https://helm.sh/docs/intro/install/
+- Helm Spray => command "helm plugin install https://github.com/ThalesGroup/helm-spray"
 
 Clone the git repo with helm charts (here master is used -> Need to check whether there are recommended branches)
 ```
@@ -58,7 +52,7 @@ cate with amf
 
 ### Deploy 
 
-Create a dedicated k8s namespace and deploy charts with helm.
+Create a dedicated k8s namespace and deploy charts with helm. 
 
 ```
 kubectl create ns oai-tutorial
@@ -68,23 +62,52 @@ helm spray --namespace oai-tutorial .
 ```
 
 The deployment fails, but this is probably because my VM is too slow. I had to wait/try several times for readyness of the pods. 
-'''console
+```console
 ubuntu@rroberts-T14A:~/WSL/OAI/oai-cn5g-fed/charts/oai-5g-core/oai-5g-basic$ helm spray --namespace oai-tutorial .
 [spray] processing chart from local file or directory "."...
 [spray] deploying solution chart "." in namespace "oai-tutorial"
 [spray] processing sub-charts of weight 0
-[spray]   > upgrading release "mysql": going from revision 1 (status deployed) to 2 (appVersion 8.0.31)...
+[spray]   > upgrading release "mysql": deploying first revision (appVersion 8.0.31)...
 [spray]     o release: "mysql" upgraded
-[spray]   > upgrading release "oai-nrf": going from revision 1 (status deployed) to 2 (appVersion v1.5.0)...
+[spray]   > upgrading release "oai-nrf": deploying first revision (appVersion v1.5.0)...
 [spray]     o release: "oai-nrf" upgraded
 [spray]   > waiting for liveness and readiness...
 [spray] processing sub-charts of weight 1
-[spray]   > upgrading release "oai-udr": going from revision 1 (status deployed) to 2 (appVersion v1.5.0)...
+[spray]   > upgrading release "oai-udr": deploying first revision (appVersion v1.5.0)...
 [spray]     o release: "oai-udr" upgraded
 [spray]   > waiting for liveness and readiness...
-Error: timed out waiting for liveness and readiness
-Error: plugin "spray" exited with error
-'''
+[spray] processing sub-charts of weight 2
+[spray]   > upgrading release "oai-udm": deploying first revision (appVersion v1.5.0)...
+[spray]     o release: "oai-udm" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] processing sub-charts of weight 3
+[spray]   > upgrading release "oai-ausf": deploying first revision (appVersion v1.5.0)...
+[spray]     o release: "oai-ausf" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] processing sub-charts of weight 4
+[spray]   > upgrading release "oai-amf": deploying first revision (appVersion v1.5.0)...
+[spray]     o release: "oai-amf" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] processing sub-charts of weight 5
+[spray]   > upgrading release "oai-spgwu-tiny": deploying first revision (appVersion v1.5.0)...
+[spray]     o release: "oai-spgwu-tiny" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] processing sub-charts of weight 6
+[spray]   > upgrading release "oai-smf": deploying first revision (appVersion v1.5.0)...
+[spray]     o release: "oai-smf" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] upgrade of solution chart "." completed in 2m1s
+ubuntu@rroberts-T14A:~/WSL/OAI/oai-testings$ kubectl get pods -n oai-tutorial
+NAME                              READY   STATUS    RESTARTS   AGE
+mysql-795c8b8d7f-h8t9z            1/1     Running   0          3m6s
+oai-amf-6ccd8654d8-6n7vf          2/2     Running   0          107s
+oai-ausf-87b7dfbd9-nh75j          2/2     Running   0          118s
+oai-nrf-77677847d6-pknb4          2/2     Running   0          3m6s
+oai-smf-6cb77d9844-7cmb9          2/2     Running   0          80s
+oai-spgwu-tiny-78c7b4fc46-g7jn5   2/2     Running   0          91s
+oai-udm-96b854bf9-4ptqs           2/2     Running   0          2m9s
+oai-udr-5c9cb57dd7-zfb87          2/2     Running   0          2m19s
+```
 
 # Testing with AWS from scratch
 
@@ -94,29 +117,28 @@ This is documented here:
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 On Linux:
-
-'''
+```
 sudo apt-get install unzip
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
-'''
+```
 
 Create an Access Key in security credentials and configure the cli.
 ![image](https://user-images.githubusercontent.com/21667569/234243961-e9e050fc-776a-48f4-a8a0-0636e65d168f.png)
 
-'''
+```
 ubuntu@rroberts-T14A:~/WSL$ aws configure
 AWS Access Key ID [None]: #####
 AWS Secret Access Key [None]: #####
 Default region name [None]: us-east1
 Default output format [None]: 
-'''
+```
 
 ## Deploy EC2 Instance
 
 Create Key 
 
-'''
+```
 aws ec2 create-key-pair --key-name rr-key-2023 --query 'KeyMaterial' --output text  > rr-key-2023.pem
-'''
+```
