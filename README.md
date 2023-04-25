@@ -1,4 +1,4 @@
-# OAI deployment in WSL2 
+# OAI deployment in WSL2
 
 Note on the deployment of OAI on windows WSL. Since we're in an environemnt with with limited resources and networking capabilities, the deployment is kept very simple. 
 
@@ -56,12 +56,67 @@ cate with amf
   useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
 ```
 
-### ???later
+### Deploy 
 
-Create a dediated k8s ns
+Create a dedicated k8s namespace and deploy charts with helm.
+
 ```
 kubectl create ns oai-tutorial
+cd charts/oai-5g-core/oai-5g-basic
+helm dependency update
+helm spray --namespace oai-tutorial .
 ```
 
+The deployment fails, but this is probably because my VM is too slow. I had to wait/try several times for readyness of the pods. 
+'''console
+ubuntu@rroberts-T14A:~/WSL/OAI/oai-cn5g-fed/charts/oai-5g-core/oai-5g-basic$ helm spray --namespace oai-tutorial .
+[spray] processing chart from local file or directory "."...
+[spray] deploying solution chart "." in namespace "oai-tutorial"
+[spray] processing sub-charts of weight 0
+[spray]   > upgrading release "mysql": going from revision 1 (status deployed) to 2 (appVersion 8.0.31)...
+[spray]     o release: "mysql" upgraded
+[spray]   > upgrading release "oai-nrf": going from revision 1 (status deployed) to 2 (appVersion v1.5.0)...
+[spray]     o release: "oai-nrf" upgraded
+[spray]   > waiting for liveness and readiness...
+[spray] processing sub-charts of weight 1
+[spray]   > upgrading release "oai-udr": going from revision 1 (status deployed) to 2 (appVersion v1.5.0)...
+[spray]     o release: "oai-udr" upgraded
+[spray]   > waiting for liveness and readiness...
+Error: timed out waiting for liveness and readiness
+Error: plugin "spray" exited with error
+'''
 
+# Testing with AWS from scratch
 
+## [If not yet done] Install aws-cli -from scratch-
+
+This is documented here:
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+On Linux:
+
+'''
+sudo apt-get install unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+'''
+
+Create an Access Key in security credentials and configure the cli.
+![image](https://user-images.githubusercontent.com/21667569/234243961-e9e050fc-776a-48f4-a8a0-0636e65d168f.png)
+
+'''
+ubuntu@rroberts-T14A:~/WSL$ aws configure
+AWS Access Key ID [None]: #####
+AWS Secret Access Key [None]: #####
+Default region name [None]: us-east1
+Default output format [None]: 
+'''
+
+## Deploy EC2 Instance
+
+Create Key 
+
+'''
+aws ec2 create-key-pair --key-name rr-key-2023 --query 'KeyMaterial' --output text  > rr-key-2023.pem
+'''
