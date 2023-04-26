@@ -57,6 +57,8 @@ terraform apply
 
 # Generic steps for OAI Deployment
 
+Most information from this section is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links.
+
 ## Single Cluster/Node
 
 - Deployment 5GC
@@ -68,7 +70,24 @@ kubectl create ns oai-tutorial
 cd charts/oai-5g-core/oai-5g-basic
 helm dependency update
 helm spray --namespace oai-tutorial .
+```
 
+After some time you get the 5GC core pods running
+```
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai-tutorial
+NAME                              READY   STATUS    RESTARTS      AGE
+mysql-795c8b8d7f-f6db8            1/1     Running   1 (28m ago)   85m
+oai-amf-6ccd8654d8-z7jkf          2/2     Running   5 (25m ago)   84m
+oai-ausf-87b7dfbd9-4lrvf          2/2     Running   5 (26m ago)   84m
+oai-nr-ue-647bd959f7-fd5hc        2/2     Running   0             2m48s
+oai-nrf-77677847d6-g7tvb          2/2     Running   2 (28m ago)   85m
+oai-smf-6cb77d9844-vtsh2          2/2     Running   0             24m
+oai-spgwu-tiny-78c7b4fc46-xwtxz   2/2     Running   0             24m
+oai-udm-96b854bf9-9d5mf           2/2     Running   4 (26m ago)   84m
+oai-udr-5c9cb57dd7-gxq5s          2/2     Running   2 (28m ago)   85m
+```
+Initialize a few env variables (Useful for Checking RAN)
+```
 export AMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].metadata.name}")
 export SMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-smf" -o jsonpath="{.items[0].metadata.name}")
 export SPGWU_TINY_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-spgwu-tiny" -o jsonpath="{.items[0].metadata.name}")
@@ -77,29 +96,36 @@ export AMF_eth0_POD_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kuber
 
 - Deployment 5GRAN
 
+Just follow the steps below for the gNB Deployment
+
 ```
-# gNB Deployment
 cd ../../oai-5g-ran
 helm install gnb oai-gnb --namespace oai-tutorial
-
+```
+When the pod is running, check that it works (you should see the 'Sending NG_SETUP_RESPONSE Ok' message from the log (last line)
+```
 export GNB_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[0].metadata.name}")
 export GNB_eth0_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[*].status.podIP}")
 
 kubectl logs -c amf $AMF_POD_NAME -n oai-tutorial | grep 'Sending NG_SETUP_RESPONSE Ok' 
+```
 
-# UE Emulation
+For UE emulation, again launch helm chart to deploy the UE emulation. 
 
+```
 helm install nrue oai-nr-ue/ --namespace oai-tutorial
+```
+After some time things should work, the last command gets you the UE IP address.
+
+```
 export NR_UE_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
 
 kubectl exec -it -n oai-tutorial -c nr-ue $NR_UE_POD_NAME -- ifconfig oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 ```
 
-# OAI deployment in WSL2
+# OAI deployment in WSL2 (CRASHES)
 
 Note on the deployment of OAI on windows WSL. Since we're in an environemnt with with limited resources and networking capabilities, the deployment is kept very simple. 
-
-Most information is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links.
 
 ## Deployment Minikube + Basic Core + gNB RF simulated
 
