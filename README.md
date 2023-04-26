@@ -50,7 +50,7 @@ helm spray --namespace oai-tutorial .
 ```
 
 After some time you get the 5GC core pods running
-```
+```console
 ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai-tutorial
 NAME                              READY   STATUS    RESTARTS      AGE
 mysql-795c8b8d7f-f6db8            1/1     Running   1 (28m ago)   85m
