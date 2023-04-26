@@ -109,9 +109,11 @@ oai-udm-96b854bf9-4ptqs           2/2     Running   0          2m9s
 oai-udr-5c9cb57dd7-zfb87          2/2     Running   0          2m19s
 ```
 
-# Testing with AWS from scratch
+# OAI deployment in AWS
 
-## [If not yet done] Install aws-cli -from scratch-
+## Preparation:
+
+### (If not yet done) Install aws-cli -from scratch-
 
 This is documented here:
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
@@ -135,7 +137,41 @@ Default region name [None]: us-east1
 Default output format [None]: 
 ```
 
-## Deploy EC2 Instance
+### Terraform install
+
+This is very straightforward: https://developer.hashicorp.com/terraform/downloads
+
+## Deploy in single cluster
+
+### launch terraform
+
+```
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+
+
+
+ubuntu@rroberts-T14A:~/WSL/AWS$ aws ec2 run-instances 
+aws ec2 run-instances --image-id ami-0d92f906962fb9003 --instance-type t2.xlarge 
+
+aws s3api create-bucket --bucket bucket-rr-kops --region us-east-1
+kops create cluster --name=rr-cluster --state=s3://bucket bucket-rr-kops --zones=us-east-1 --node-count=1 --node-size=t.medium --master-size=t2.xlarge --dns-zone=mycluster.oai.net
+
+kops create cluster --name=k8s-cluster.example.com --node-size=t2.xlarge --state=s3://bucket-rr-kops --zones=us-east-1a --node-count=1 --master-size=t2.xlarge  --dns-zone=mycluster.oai.net
+
+kops create cluster --name=k8s-cluster.example.com \
+--state=s3://bucket-rr-kops \
+--zones=us-east-1 \
+--node-count=1
+
+aws s3api create-bucket --bucket my-bucket --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+aws s3api create-bucket --bucket my-bucket --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+
+kops create cluster --name=mycluster.example.com --state=s3://my-kops-state-store --zones=us-east-1a --node-count=3 --node-size=t2.medium --master-size=t2.small --dns-zone=mycluster.example.com
 
 Create Key 
 
