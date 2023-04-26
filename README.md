@@ -1,6 +1,6 @@
 # OAI deployment in AWS
 
-## Preparation:
+## Preparation
 
 ### (If not yet done) Install aws-cli -from scratch-
 
@@ -30,7 +30,7 @@ Default output format [None]:
 
 This is very straightforward: https://developer.hashicorp.com/terraform/downloads
 
-## Deploy in single cluster
+## Single Node Cluster VM deployment
 
 ### Use AMI with Pre-installed OAI
 
