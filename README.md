@@ -194,7 +194,7 @@ variable "key_name" {
   description = "EC2 Key name"
   default = "rr-key-2023-2"
  ```
-- Terraform manifest for single node cluster are in the "single-node" folder:
+- Launch terraform for single node cluster:
 ```
 terraform init
 terraform validate
