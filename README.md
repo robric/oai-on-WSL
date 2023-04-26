@@ -1,60 +1,3 @@
-# OAI deployment in AWS
-
-## Preparation
-
-### (If not yet done) Install aws-cli -from scratch-
-
-This is documented here:
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-
-On Linux:
-```
-sudo apt-get install unzip
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-```
-
-Create an Access Key in security credentials and configure the cli.
-![image](https://user-images.githubusercontent.com/21667569/234243961-e9e050fc-776a-48f4-a8a0-0636e65d168f.png)
-
-```
-ubuntu@rroberts-T14A:~/WSL$ aws configure
-AWS Access Key ID [None]: #####
-AWS Secret Access Key [None]: #####
-Default region name [None]: us-east1
-Default output format [None]: 
-```
-
-Create Key 
-```
-aws ec2 create-key-pair --key-name rr-key-2023-2 --query 'KeyMaterial' --output text  > ~/.ssh/rr-key-2023-2.pem
-```
-
-
-### Terraform install
-
-This is very straightforward: https://developer.hashicorp.com/terraform/downloads
-
-## Single Node Cluster VM deployment
-
-### Use AMI with Pre-installed OAI
-
-- Clone this repo
-```
-git clone https://github.com/robric/oai-testings.git
-```
-- Terraform manifest for single node cluster are in the "single-node" folder:
-```
-cd oai-testings/single-node
-terraform init
-terraform validate
-terraform plan
-terraform apply
-```
-
-###
-
 # Generic steps for OAI Deployment
 
 ## Background
@@ -91,6 +34,9 @@ cate with amf
 ```
 ## Single Cluster/Node
 
+This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). 
+
+![image](https://user-images.githubusercontent.com/21667569/234654647-c302bb38-d98c-4f12-9f4d-2c9c1a8d00f7.png)
 
 - Deployment 5GC
 
@@ -168,6 +114,65 @@ ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai-tu
 config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 12.1.1.100
 ```
+
+# OAI deployment in AWS
+
+## Preparation
+
+### (If not yet done) Install aws-cli -from scratch-
+
+This is documented here:
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+On Linux:
+```
+sudo apt-get install unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+```
+
+Create an Access Key in security credentials and configure the cli.
+![image](https://user-images.githubusercontent.com/21667569/234243961-e9e050fc-776a-48f4-a8a0-0636e65d168f.png)
+
+```
+ubuntu@rroberts-T14A:~/WSL$ aws configure
+AWS Access Key ID [None]: #####
+AWS Secret Access Key [None]: #####
+Default region name [None]: us-east1
+Default output format [None]: 
+```
+
+Create Key 
+```
+aws ec2 create-key-pair --key-name rr-key-2023-2 --query 'KeyMaterial' --output text  > ~/.ssh/rr-key-2023-2.pem
+```
+
+
+### Terraform install
+
+This is very straightforward: https://developer.hashicorp.com/terraform/downloads
+
+## Single Node Cluster VM deployment
+
+### Use AMI with Pre-installed OAI
+
+- Clone this repo
+```
+git clone https://github.com/robric/oai-testings.git
+```
+- Terraform manifest for single node cluster are in the "single-node" folder:
+```
+cd oai-testings/single-node
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+###
+
+
 
 # OAI deployment in WSL2 (CRASHES)
 
