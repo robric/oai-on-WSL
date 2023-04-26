@@ -109,6 +109,7 @@ oai-udm-96b854bf9-4ptqs           2/2     Running   0          2m9s
 oai-udr-5c9cb57dd7-zfb87          2/2     Running   0          2m19s
 ```
 
+### gNB 
 # OAI deployment in AWS
 
 ## Preparation:
