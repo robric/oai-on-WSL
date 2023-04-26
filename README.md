@@ -26,6 +26,12 @@ Default region name [None]: us-east1
 Default output format [None]: 
 ```
 
+Create Key 
+```
+aws ec2 create-key-pair --key-name rr-key-2023-2 --query 'KeyMaterial' --output text  > ~/.ssh/rr-key-2023-2.pem
+```
+
+
 ### Terraform install
 
 This is very straightforward: https://developer.hashicorp.com/terraform/downloads
@@ -47,31 +53,46 @@ terraform plan
 terraform apply
 ```
 
+###
 
+# Generic steps for OAI Deployment
 
+## Single Cluster/Node
 
-ubuntu@rroberts-T14A:~/WSL/AWS$ aws ec2 run-instances 
-aws ec2 run-instances --image-id ami-0d92f906962fb9003 --instance-type t2.xlarge 
-
-aws s3api create-bucket --bucket bucket-rr-kops --region us-east-1
-kops create cluster --name=rr-cluster --state=s3://bucket bucket-rr-kops --zones=us-east-1 --node-count=1 --node-size=t.medium --master-size=t2.xlarge --dns-zone=mycluster.oai.net
-
-kops create cluster --name=k8s-cluster.example.com --node-size=t2.xlarge --state=s3://bucket-rr-kops --zones=us-east-1a --node-count=1 --master-size=t2.xlarge  --dns-zone=mycluster.oai.net
-
-kops create cluster --name=k8s-cluster.example.com \
---state=s3://bucket-rr-kops \
---zones=us-east-1 \
---node-count=1
-
-aws s3api create-bucket --bucket my-bucket --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
-aws s3api create-bucket --bucket my-bucket --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
-
-kops create cluster --name=mycluster.example.com --state=s3://my-kops-state-store --zones=us-east-1a --node-count=3 --node-size=t2.medium --master-size=t2.small --dns-zone=mycluster.example.com
-
-Create Key 
+- Deployment 5GC
 
 ```
-aws ec2 create-key-pair --key-name rr-key-2023 --query 'KeyMaterial' --output text  > rr-key-2023.pem
+git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
+cd oai-cn5g-fed/
+kubectl create ns oai-tutorial
+cd charts/oai-5g-core/oai-5g-basic
+helm dependency update
+helm spray --namespace oai-tutorial .
+
+export AMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].metadata.name}")
+export SMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-smf" -o jsonpath="{.items[0].metadata.name}")
+export SPGWU_TINY_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-spgwu-tiny" -o jsonpath="{.items[0].metadata.name}")
+export AMF_eth0_POD_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].status.podIP}")
+```
+
+- Deployment 5GRAN
+
+```
+# gNB Deployment
+cd ../../oai-5g-ran
+helm install gnb oai-gnb --namespace oai-tutorial
+
+export GNB_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[0].metadata.name}")
+export GNB_eth0_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[*].status.podIP}")
+
+kubectl logs -c amf $AMF_POD_NAME -n oai-tutorial | grep 'Sending NG_SETUP_RESPONSE Ok' 
+
+# UE Emulation
+
+helm install nrue oai-nr-ue/ --namespace oai-tutorial
+export NR_UE_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
+
+kubectl exec -it -n oai-tutorial -c nr-ue $NR_UE_POD_NAME -- ifconfig oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 ```
 
 # OAI deployment in WSL2
