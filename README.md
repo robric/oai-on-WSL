@@ -36,8 +36,6 @@ cate with amf
 
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). 
 
-![image](https://user-images.githubusercontent.com/21667569/234654647-c302bb38-d98c-4f12-9f4d-2c9c1a8d00f7.png)
-
 - Deployment 5GC
 
 ```
@@ -155,7 +153,12 @@ This is very straightforward: https://developer.hashicorp.com/terraform/download
 
 ## Single Node Cluster VM deployment
 
+The Terraform manifests below deploys a Single-Node in AWS.
+
+![image](https://user-images.githubusercontent.com/21667569/234654647-c302bb38-d98c-4f12-9f4d-2c9c1a8d00f7.png)
+
 ### Use AMI with Pre-installed OAI
+
 
 - Clone this repo
 ```
