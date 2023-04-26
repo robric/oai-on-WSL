@@ -12,6 +12,14 @@ variable "server_tag_name" {
   default = "rr-oai-test-instance"
 }
 variable "ami_id" {
-  description = "Server tag name"
-  default = "ami-007855ac798b5175e"
+  description = "Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2023-03-25"
+  default = "ami-042b6a0a42a65d9f5"
+}
+variable "private_key_file" {
+  description = "Private key file location for ssh access"
+  default = "~/.ssh/rr-key-2023-2.pem"
+}
+variable "key_name" {
+  description = "EC2 Key name"
+  default = "rr-key-2023-2"
 }
