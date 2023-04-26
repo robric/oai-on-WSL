@@ -57,9 +57,40 @@ terraform apply
 
 # Generic steps for OAI Deployment
 
+## Background
 Most information from this section is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links.
 
+Each NF is associated with a values.yaml file which stores parameters for the deployment.
+Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
+
+```
+config:
+  mountConfig: false          #If config file is mounted then please edit mount.conf in configmap.yaml properly
+  timeZone: "Europe/Paris"
+  rfSimulator: "server"
+  gnbduName: "oai-du-rfsim"
+  useSaTDDcu: "yes"
+  mcc: "001"   # check the information with AMF, SMF, UPF/SPGWU
+  mnc: "01"    # check the information with AMF, SMF, UPF/SPGWU
+  mncLength: "2" # check the information with AMF, SMF, UPF/SPGWU
+  tac: "1"     # check the information with AMF
+  nssaiSst: "1"  #currently only 4 standard values are allowed 1,2,3,4
+  nssaiSd0: "ffffff"    #values in hexa-decimal format
+  amfIpAddress: "oai-amf-svc"  # Not mandatory, you can leave it like this in coming release it will be removed
+  gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communi
+cate with amf
+  gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
+  gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
+  gnbNguIpAddress: "status.podIP" # n3IPadd in case multus create is true
+  f1IfName: "eth0"                # net3 incase multus create is true
+  f1cuIpAddress: "10.244.0.92"     # replace this value with GNB_CU_eth0_IP if not using multus
+  f1duIpAddress: "status.podIP"
+  f1cuPort: "2153"
+  f1duPort: "2153"
+  useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
+```
 ## Single Cluster/Node
+
 
 - Deployment 5GC
 
@@ -117,10 +148,25 @@ helm install nrue oai-nr-ue/ --namespace oai-tutorial
 ```
 After some time things should work, the last command gets you the UE IP address.
 
-```
-export NR_UE_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
+```console
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai-tutorial
+NAME                              READY   STATUS    RESTARTS      AGE
+mysql-795c8b8d7f-f6db8            1/1     Running   1 (43m ago)   100m
+oai-amf-6ccd8654d8-z7jkf          2/2     Running   5 (40m ago)   99m
+oai-ausf-87b7dfbd9-4lrvf          2/2     Running   5 (41m ago)   99m
+oai-gnb-67f978678d-rjv7p          2/2     Running   0             22m
+oai-nr-ue-647bd959f7-fd5hc        2/2     Running   0             17m
+oai-nrf-77677847d6-g7tvb          2/2     Running   2 (43m ago)   100m
+oai-smf-6cb77d9844-vtsh2          2/2     Running   0             39m
+oai-spgwu-tiny-78c7b4fc46-xwtxz   2/2     Running   0             39m
+oai-udm-96b854bf9-9d5mf           2/2     Running   4 (41m ago)   100m
+oai-udr-5c9cb57dd7-gxq5s          2/2     Running   2 (43m ago)   100m
 
-kubectl exec -it -n oai-tutorial -c nr-ue $NR_UE_POD_NAME -- ifconfig oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ export NR_UE_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
+
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai-tutorial -c nr-ue $NR_UE_POD_NAME -- if
+config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
+12.1.1.100
 ```
 
 # OAI deployment in WSL2 (CRASHES)
@@ -141,37 +187,7 @@ Clone the git repo with helm charts (here master is used -> Need to check whethe
 git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
 ```
 
-### Tuning
 
-Each NF is associated with a values.yaml file which stores parameters for the deployment.
-Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
-
-```
-config:
-  mountConfig: false          #If config file is mounted then please edit mount.conf in configmap.yaml properly
-  timeZone: "Europe/Paris"
-  rfSimulator: "server"
-  gnbduName: "oai-du-rfsim"
-  useSaTDDcu: "yes"
-  mcc: "001"   # check the information with AMF, SMF, UPF/SPGWU
-  mnc: "01"    # check the information with AMF, SMF, UPF/SPGWU
-  mncLength: "2" # check the information with AMF, SMF, UPF/SPGWU
-  tac: "1"     # check the information with AMF
-  nssaiSst: "1"  #currently only 4 standard values are allowed 1,2,3,4
-  nssaiSd0: "ffffff"    #values in hexa-decimal format
-  amfIpAddress: "oai-amf-svc"  # Not mandatory, you can leave it like this in coming release it will be removed
-  gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communi
-cate with amf
-  gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
-  gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
-  gnbNguIpAddress: "status.podIP" # n3IPadd in case multus create is true
-  f1IfName: "eth0"                # net3 incase multus create is true
-  f1cuIpAddress: "10.244.0.92"     # replace this value with GNB_CU_eth0_IP if not using multus
-  f1duIpAddress: "status.podIP"
-  f1cuPort: "2153"
-  f1duPort: "2153"
-  useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
-```
 
 ### Deploy 
 
