@@ -110,6 +110,24 @@ oai-udr-5c9cb57dd7-zfb87          2/2     Running   0          2m19s
 ```
 
 ### gNB 
+
+The gNB crashes. 
+
+```
+ubuntu@rroberts-T14A:~$ kubectl get pods -n oai-tutorial
+*NAME                              READY   STATUS    RESTARTS        AGE
+mysql-795c8b8d7f-h8t9z            1/1     Running   1 (93s ago)     23h
+oai-amf-6ccd8654d8-6n7vf          1/2     Running   3 (32s ago)     23h
+oai-ausf-87b7dfbd9-nh75j          2/2     Running   3 (32s ago)     23h
+oai-gnb-67f978678d-cz7gf          1/2     Error     106 (41s ago)   23h
+oai-nr-ue-647bd959f7-bt6t7        1/2     Error     108 (39s ago)   23h
+oai-nrf-77677847d6-pknb4          2/2     Running   2 (93s ago)     23h
+oai-smf-6cb77d9844-7cmb9          1/2     Running   3 (33s ago)     23h
+oai-spgwu-tiny-78c7b4fc46-g7jn5   2/2     Running   3 (38s ago)     23h
+oai-udm-96b854bf9-4ptqs           2/2     Running   3 (33s ago)     23h
+oai-udr-5c9cb57dd7-zfb87          2/2     Running   2 (93s ago)     23h
+ubuntu@rroberts-T14A:~$ 
+```
 # OAI deployment in AWS
 
 ## Preparation:
