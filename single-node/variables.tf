@@ -11,3 +11,7 @@ variable "server_tag_name" {
   description = "Server tag name"
   default = "rr-oai-test-instance"
 }
+variable "ami_id" {
+  description = "Server tag name"
+  default = "ami-007855ac798b5175e"
+}
