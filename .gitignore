@@ -2,7 +2,10 @@
 .terraform/*
 .terraform.lock.hcl
 single-node/*
+two-nodes-5GC-RAN/*
 !single-node/*.tf
 !single-node/*.sh
+!two-nodes-5GC-RAN/*.tf
+!two-nodes-5GC-RAN/*.sh
 single-node/.terraform/*
 single-node/.terraform/providers/registry.terraform.io/hashicorp/aws/4.64.0/linux_amd64/terraform-provider-aws_v4.64.0_x5
