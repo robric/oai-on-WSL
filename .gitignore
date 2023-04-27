@@ -3,5 +3,6 @@
 .terraform.lock.hcl
 single-node/*
 !single-node/*.tf
+!single-node/*.sh
 single-node/.terraform/*
 single-node/.terraform/providers/registry.terraform.io/hashicorp/aws/4.64.0/linux_amd64/terraform-provider-aws_v4.64.0_x5
