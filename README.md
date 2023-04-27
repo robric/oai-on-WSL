@@ -114,16 +114,27 @@ config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 
 ## Hack 1: add a second UE
 
-In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values
+First, don't even think of increasing replicas in the deployment: you need to modify a key -unique per UE- 5G parameters (IMSI).
+In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values.
 
 ```
 cd ~/oai-cn5g-fed/charts/oai-5g-ran/
 mkdir oai-nr-ue2
 cp -R oai-nr-ue/* oai-nr-ue2/
 ```
-Then, make edits in the new folder (i.e. "oai-nr-ue2")
+Make edits in the new folder (i.e. "oai-nr-ue2")
 - edit values.yaml to configure a different IMSI for ue2 (e.g. '001010000000102')
 - edit Chart.yaml and change de name (i.e. change the Chart name "oai-nr-ue" to "oai-nr-ue2")
+Then apply the new chart
+```
+helm install nrue2 . -n oai
+```
+That should do the trick.
+```
+ubuntu@ip-10-0-1-238:~/oai-cn5g-fed/charts/oai-5g-ran/oai-nr-ue2$ kubectl get pods -A | grep ue
+oai           oai-nr-ue-647bd959f7-58z5t         2/2     Running   10 (2m26s ago)   74m
+oai           oai-nr-ue2-699455654c-xrw96        2/2     Running   6 (2m30s ago)    13m
+```
 
 # OAI deployment in AWS
 
