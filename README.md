@@ -135,6 +135,23 @@ ubuntu@ip-10-0-1-238:~/oai-cn5g-fed/charts/oai-5g-ran/oai-nr-ue2$ kubectl get po
 oai           oai-nr-ue-647bd959f7-58z5t         2/2     Running   10 (2m26s ago)   74m
 oai           oai-nr-ue2-699455654c-xrw96        2/2     Running   6 (2m30s ago)    13m
 ```
+UEs can ping each other (.100 is the address of nr-ue) !
+```
+ubuntu@ip-10-0-1-238:~$ kubectl exec -it oai-nr-ue2-699455654c-xrw96 -n oai sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+Defaulted container "nr-ue" out of: nr-ue, tcpdump
+# ip addr
+[...]
+3: oaitun_ue1: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
+    link/none
+    inet 12.1.1.102/24 brd 12.1.1.255 scope global oaitun_ue1
+       valid_lft forever preferred_lft forever
+# ping 12.1.1.100
+PING 12.1.1.100 (12.1.1.100) 56(84) bytes of data.
+64 bytes from 12.1.1.100: icmp_seq=1 ttl=64 time=220 ms
+64 bytes from 12.1.1.100: icmp_seq=2 ttl=64 time=350 ms
+64 bytes from 12.1.1.100: icmp_seq=3 ttl=64 time=245 ms
+```
 
 # OAI deployment in AWS
 
