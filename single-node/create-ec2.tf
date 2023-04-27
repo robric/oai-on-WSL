@@ -58,12 +58,18 @@ resource "aws_security_group" "rr-oai-test-sg" {
   }
 }
 
-resource "null_resource" "upload_script" {
-  provisioner "file" {
-    source      = "${var.oai_deployment_file}"
-    destination = "oai-deployment.sh"
-  }
-}
+// resource "null_resource" "upload_script" {
+//   provisioner "file" {
+//     source      = "${var.oai_deployment_file}"
+//     destination = "oai-deployment.sh"
+//     connection {
+//       type        = "ssh"
+//       user        = "ubuntu"
+//       private_key = file("${var.private_key_file}")
+//       host        = aws_instance.rr-oai-test-instance.public_ip
+//     }
+//   }
+// }
 
 resource "aws_instance" "rr-oai-test-instance" {
   ami           = "${var.ami_id}"
@@ -79,11 +85,21 @@ resource "aws_instance" "rr-oai-test-instance" {
     volume_type = "gp2"
   }
   
-  depends_on = [null_resource.upload_script]
-
+//  depends_on = [null_resource.upload_script]
+  
+  provisioner "file" {
+    source      = "${var.oai_deployment_file}"
+    destination = "oai-deployment.sh"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${var.private_key_file}")
+      host        = aws_instance.rr-oai-test-instance.public_ip
+    }
+  }
   provisioner "remote-exec" {
     inline = [
-      "sh oai-deployment.sh"
+      "sleep 60", "sh oai-deployment.sh"
     ]
     connection {
       type        = "ssh"
