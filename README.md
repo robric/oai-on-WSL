@@ -111,6 +111,58 @@ ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai-tu
 config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 12.1.1.100
 ```
+Pings from a UE to internet just work fine.
+```
+ubuntu@ip-10-0-1-238:~$ kubectl exec -it oai-nr-ue-647bd959f7-58z5t -n oai -- ping -I oaitun_ue1  www.juniper.net
+Defaulted container "nr-ue" out of: nr-ue, tcpdump
+PING e1824.dscb.akamaiedge.net (104.84.54.246) from 12.1.1.100 oaitun_ue1: 56(84) bytes of data.
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=1 ttl=42 time=113 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=2 ttl=42 time=352 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=3 ttl=42 time=94.4 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=4 ttl=43 time=164 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=5 ttl=43 time=224 ms
+```
+
+## Hack 1: add a second UE
+
+First, don't even think of increasing replicas in the deployment: you need to modify a key -unique per UE- 5G parameters (IMSI).
+In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values.
+
+```
+cd ~/oai-cn5g-fed/charts/oai-5g-ran/
+mkdir oai-nr-ue2
+cp -R oai-nr-ue/* oai-nr-ue2/
+```
+Make edits in the new folder (i.e. "oai-nr-ue2")
+- edit values.yaml to configure a different IMSI for ue2 (e.g. '001010000000102')
+- edit Chart.yaml and change de name (i.e. change the Chart name "oai-nr-ue" to "oai-nr-ue2")
+Then apply the new chart
+```
+helm install nrue2 . -n oai
+```
+That should do the trick.
+```
+ubuntu@ip-10-0-1-238:~/oai-cn5g-fed/charts/oai-5g-ran/oai-nr-ue2$ kubectl get pods -A | grep ue
+oai           oai-nr-ue-647bd959f7-58z5t         2/2     Running   10 (2m26s ago)   74m
+oai           oai-nr-ue2-699455654c-xrw96        2/2     Running   6 (2m30s ago)    13m
+```
+UEs can ping each other (.100 is the address of nr-ue) !
+```
+ubuntu@ip-10-0-1-238:~$ kubectl exec -it oai-nr-ue2-699455654c-xrw96 -n oai sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+Defaulted container "nr-ue" out of: nr-ue, tcpdump
+# ip addr
+[...]
+3: oaitun_ue1: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
+    link/none
+    inet 12.1.1.102/24 brd 12.1.1.255 scope global oaitun_ue1
+       valid_lft forever preferred_lft forever
+# ping 12.1.1.100
+PING 12.1.1.100 (12.1.1.100) 56(84) bytes of data.
+64 bytes from 12.1.1.100: icmp_seq=1 ttl=64 time=220 ms
+64 bytes from 12.1.1.100: icmp_seq=2 ttl=64 time=350 ms
+64 bytes from 12.1.1.100: icmp_seq=3 ttl=64 time=245 ms
+```
 
 # OAI deployment in AWS
 
