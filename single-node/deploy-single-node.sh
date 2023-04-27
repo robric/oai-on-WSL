@@ -24,6 +24,8 @@ export GNB_eth0_IP=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name
 
 kubectl logs -c amf $AMF_POD_NAME -n oai  | grep 'Sending NG_SETUP_RESPONSE Ok' 
 
+sleep 10
+
 helm install nrue oai-nr-ue/ --namespace oai
 export NR_UE_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
 
