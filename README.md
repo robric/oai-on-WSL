@@ -54,7 +54,6 @@ NAME                              READY   STATUS    RESTARTS      AGE
 mysql-795c8b8d7f-f6db8            1/1     Running   1 (28m ago)   85m
 oai-amf-6ccd8654d8-z7jkf          2/2     Running   5 (25m ago)   84m
 oai-ausf-87b7dfbd9-4lrvf          2/2     Running   5 (26m ago)   84m
-oai-nr-ue-647bd959f7-fd5hc        2/2     Running   0             2m48s
 oai-nrf-77677847d6-g7tvb          2/2     Running   2 (28m ago)   85m
 oai-smf-6cb77d9844-vtsh2          2/2     Running   0             24m
 oai-spgwu-tiny-78c7b4fc46-xwtxz   2/2     Running   0             24m
