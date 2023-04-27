@@ -34,7 +34,7 @@ cate with amf
 ```
 ## Single Cluster/Node
 
-This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). 
+This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "deploy-single-node.sh" executes the commands detailed below.
 
 - Deployment 5GC
 
@@ -168,8 +168,14 @@ git clone https://github.com/robric/oai-testings.git
 ```
 ubuntu@rroberts-T14A:~/WSL/OAI/$ cd oai-testings/single-node/
 ubuntu@rroberts-T14A:~/WSL/OAI/oai-testings/single-node$ cat variables.tf 
-# provider variables
+#
+# provider variables: region, names, OAI ami
+#
 variable "provider_region" {
+ description = "Provider region"
+ default = "us-east-1"
+}
+variable "vpc_name" {
  description = "Provider region"
  default = "us-east-1"
 }
@@ -182,9 +188,12 @@ variable "server_tag_name" {
   default = "rr-oai-test-instance"
 }
 variable "ami_id" {
-  description = "Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2023-03-25"
-  default = "ami-042b6a0a42a65d9f5"
+  description = "OAI-ready-to-use Ubuntu jammy image with minikube, OAI images, helm and charts"
+  default = "ami-0fb0fac0077bfb65c"
 }
+#
+# Credentials for ssh access to EC2 instances
+#
 variable "private_key_file" {
   description = "Private key file location for ssh access"
   default = "~/.ssh/rr-key-2023-2.pem"
@@ -192,8 +201,18 @@ variable "private_key_file" {
 variable "key_name" {
   description = "EC2 Key name"
   default = "rr-key-2023-2"
+}
+
+#
+# Script for OAI deployment
+#
+
+variable "oai_deployment_file" {
+  description = "Local script to deploy OAI"
+  default = "deploy-single-node.sh"
+}
  ```
-- Launch terraform for single node cluster:
+- Launch terraform for single node cluster. The script for the deployment of OAI (i.e. "deploy-single-node.sh") is automatically copied and executed in the EC2 instance. 
 ```
 terraform init
 terraform validate
