@@ -111,6 +111,17 @@ ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai-tu
 config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 12.1.1.100
 ```
+Pings from a UE to internet just work fine.
+```
+ubuntu@ip-10-0-1-238:~$ kubectl exec -it oai-nr-ue-647bd959f7-58z5t -n oai -- ping -I oaitun_ue1  www.juniper.net
+Defaulted container "nr-ue" out of: nr-ue, tcpdump
+PING e1824.dscb.akamaiedge.net (104.84.54.246) from 12.1.1.100 oaitun_ue1: 56(84) bytes of data.
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=1 ttl=42 time=113 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=2 ttl=42 time=352 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=3 ttl=42 time=94.4 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=4 ttl=43 time=164 ms
+64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=5 ttl=43 time=224 ms
+```
 
 ## Hack 1: add a second UE
 
