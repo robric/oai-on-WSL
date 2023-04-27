@@ -175,10 +175,6 @@ variable "provider_region" {
  description = "Provider region"
  default = "us-east-1"
 }
-variable "vpc_name" {
- description = "Provider region"
- default = "us-east-1"
-}
 variable "server_instance_type" {
   description = "Server instance type"
   default = "t2.xlarge"
