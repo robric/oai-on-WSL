@@ -8,7 +8,7 @@ resource "aws_vpc" "oai-vpc" {
 resource "aws_internet_gateway" "oai-igw" {
   vpc_id = aws_vpc.oai-vpc.id
   tags = {
-    Name = "oai-igw"
+    Name = "${var.generic_tag_name}-igw"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "oai-subnet" {
   vpc_id     = aws_vpc.oai-vpc.id
   cidr_block = "10.0.1.0/24"
   tags = {
-    Name = "oai-subnet"
+    Name = "${var.generic_tag_name}-subnet"
   }
 }
 
@@ -28,7 +28,7 @@ resource "aws_route" "internet_gateway" {
 
 
 resource "aws_security_group" "oai-sg" {
-  name_prefix = "oai-sg"
+  name_prefix = "${var.generic_tag_name}-sg"
   vpc_id = aws_vpc.oai-vpc.id
 
   ingress {
@@ -61,9 +61,7 @@ resource "aws_instance" "oai-instance_1" {
     volume_size = 16
     volume_type = "gp2"
   }
-  
-//  depends_on = [null_resource.upload_script]
-  
+ 
   provisioner "file" {
     source      = "${var.oai_deployment_file}"
     destination = "oai-deployment.sh"
@@ -74,19 +72,36 @@ resource "aws_instance" "oai-instance_1" {
       host        = aws_instance.oai-instance_1.public_ip
     }
   }
-  provisioner "remote-exec" {
-    inline = [
-      "sleep 60", "sh oai-deployment.sh"
-    ]
+  tags = {
+    Name = "${var.server1_tag_name}"
+  }
+}
+
+resource "aws_instance" "oai-instance_2" {
+  ami           = "${var.ami_id}"
+  instance_type = "${var.server_instance_type}"
+  key_name      = "${var.key_name}"
+  subnet_id     = aws_subnet.oai-subnet.id
+  associate_public_ip_address = true
+  security_groups = [aws_security_group.oai-sg.id]
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 16
+    volume_type = "gp2"
+  }
+ 
+  provisioner "file" {
+    source      = "${var.oai_deployment_file}"
+    destination = "oai-deployment.sh"
     connection {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("${var.private_key_file}")
-      host        = aws_instance.oai-instance_1.public_ip
+      host        = aws_instance.oai-instance_2.public_ip
     }
   }
-
   tags = {
-    Name = "${var.server1_tag_name}"
+    Name = "${var.server2_tag_name}"
   }
 }

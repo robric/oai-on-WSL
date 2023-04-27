@@ -1,6 +1,6 @@
 #
 # provider variables: region, names, OAI ami
-# Make sure to modify generic tag name to avoid overlaps
+# Make sure to modify generic tag name to avoid overlaps (use for vpc/subnet)
 #
 variable "generic_tag_name" {
   description = "Generic Tag Name for vpc, subnet, igw"
@@ -16,11 +16,11 @@ variable "server_instance_type" {
 }
 variable "server1_tag_name" {
   description = "Server tag name"
-  default = "5GC"
+  default = "oai-2-nodes-5GC"
 }
 variable "server2_tag_name" {
   description = "Server tag name"
-  default = "RAN"
+  default = "oai-2-nodes-RAN"
 }
 variable "ami_id" {
   description = "OAI-ready-to-use Ubuntu jammy image with minikube, OAI images, helm and charts"
