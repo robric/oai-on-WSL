@@ -58,6 +58,13 @@ resource "aws_security_group" "rr-oai-test-sg" {
   }
 }
 
+resource "null_resource" "upload_script" {
+  provisioner "file" {
+    source      = "${var.oai_deployment_file}"
+    destination = "oai-deployment.sh"
+  }
+}
+
 resource "aws_instance" "rr-oai-test-instance" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
@@ -71,10 +78,12 @@ resource "aws_instance" "rr-oai-test-instance" {
     volume_size = 16
     volume_type = "gp2"
   }
+  
+  depends_on = [null_resource.upload_script]
 
   provisioner "remote-exec" {
     inline = [
-      "touch test"
+      "sh oai-deployment.sh"
     ]
     connection {
       type        = "ssh"
