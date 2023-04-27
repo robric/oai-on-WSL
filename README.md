@@ -159,14 +159,13 @@ The Terraform manifests below deploys a Single-Node in AWS.
 ### Use AMI with Pre-installed OAI
 
 
-- Clone this repo
+- Clone this repo and go to the "oai-testings/single-node/" folder
 ```
 git clone https://github.com/robric/oai-testings.git
+cd oai-testings/single-node/
 ```
 - Edit variables (region, credentials, private key, ami) in variables.tf file:
-
 ```
-ubuntu@rroberts-T14A:~/WSL/OAI/$ cd oai-testings/single-node/
 ubuntu@rroberts-T14A:~/WSL/OAI/oai-testings/single-node$ cat variables.tf 
 #
 # provider variables: region, names, OAI ami
