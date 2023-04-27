@@ -12,9 +12,12 @@ variable "server_tag_name" {
   default = "rr-oai-test-instance"
 }
 variable "ami_id" {
-  description = "Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2023-03-25"
-  default = "ami-042b6a0a42a65d9f5"
+  description = "OAI-ready-to-use Ubuntu jammy image with minikube, OAI images and charts"
+  default = "ami-0fb0fac0077bfb65c"
 }
+#
+# Credentials for ssh access to EC2 instances
+#
 variable "private_key_file" {
   description = "Private key file location for ssh access"
   default = "~/.ssh/rr-key-2023-2.pem"
