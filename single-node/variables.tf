@@ -5,6 +5,10 @@ variable "provider_region" {
  description = "Provider region"
  default = "us-east-1"
 }
+variable "vpc_name" {
+ description = "TBD placeholder"
+ default = ""
+}
 variable "server_instance_type" {
   description = "Server instance type"
   default = "t2.xlarge"
