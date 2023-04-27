@@ -112,6 +112,19 @@ config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 12.1.1.100
 ```
 
+## Hack 1: add a second UE
+
+In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values
+
+```
+cd ~/oai-cn5g-fed/charts/oai-5g-ran/
+mkdir oai-nr-ue2
+cp -R oai-nr-ue/* oai-nr-ue2/
+```
+Then, make edits in the new folder (i.e. "oai-nr-ue2")
+- edit values.yaml to configure a different IMSI for ue2 (e.g. '001010000000102')
+- edit Chart.yaml and change de name (i.e. change the Chart name "oai-nr-ue" to "oai-nr-ue2")
+
 # OAI deployment in AWS
 
 ## Preparation
