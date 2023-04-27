@@ -2,8 +2,8 @@
 # provider variables: region, names, OAI ami
 # Make sure to modify generic tag name to avoid overlaps (use for vpc/subnet)
 #
-variable "generic_tag_name" {
-  description = "Generic Tag Name for vpc, subnet, igw"
+variable "vpc_tag_name" {
+  description = "Generic VPC Tag Name used for vpc, subnet, igw"
   default = "rr-oai-2-nodes"
 }
 variable "provider_region" {

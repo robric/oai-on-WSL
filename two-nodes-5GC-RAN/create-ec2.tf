@@ -1,14 +1,14 @@
 resource "aws_vpc" "oai-vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "${var.generic_tag_name}-vpc"
+    Name = "${var.vpc_tag_name}-vpc"
   }
 }
 
 resource "aws_internet_gateway" "oai-igw" {
   vpc_id = aws_vpc.oai-vpc.id
   tags = {
-    Name = "${var.generic_tag_name}-igw"
+    Name = "${var.vpc_tag_name}-igw"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "oai-subnet" {
   vpc_id     = aws_vpc.oai-vpc.id
   cidr_block = "10.0.1.0/24"
   tags = {
-    Name = "${var.generic_tag_name}-subnet"
+    Name = "${var.vpc_tag_name}-subnet"
   }
 }
 
@@ -28,7 +28,7 @@ resource "aws_route" "internet_gateway" {
 
 
 resource "aws_security_group" "oai-sg" {
-  name_prefix = "${var.generic_tag_name}-sg"
+  name_prefix = "${var.vpc_tag_name}-sg"
   vpc_id = aws_vpc.oai-vpc.id
 
   ingress {
