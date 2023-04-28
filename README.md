@@ -123,7 +123,7 @@ PING e1824.dscb.akamaiedge.net (104.84.54.246) from 12.1.1.100 oaitun_ue1: 56(84
 64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=5 ttl=43 time=224 ms
 ```
 
-## Hack 1: add a second UE
+## Mod 1: add a second UE
 
 First, don't even think of increasing replicas in the deployment: you need to modify a key -unique per UE- 5G parameters (IMSI).
 In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values.
