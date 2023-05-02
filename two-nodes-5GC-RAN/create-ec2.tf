@@ -12,11 +12,18 @@ resource "aws_internet_gateway" "oai-igw" {
   }
 }
 
-resource "aws_subnet" "oai-subnet" {
+resource "aws_subnet" "oai-subnet-mngt" {
   vpc_id     = aws_vpc.oai-vpc.id
   cidr_block = "10.0.1.0/24"
   tags = {
-    Name = "${var.vpc_tag_name}-subnet"
+    Name = "${var.vpc_tag_name}-sub-mngt"
+  }
+}
+resource "aws_subnet" "oai-subnet-data" {
+  vpc_id     = aws_vpc.oai-vpc.id
+  cidr_block = "10.0.2.0/24"
+  tags = {
+    Name = "${var.vpc_tag_name}-sub-data"
   }
 }
 
@@ -52,7 +59,7 @@ resource "aws_instance" "oai-instance_1" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-  subnet_id     = aws_subnet.oai-subnet.id
+  subnet_id     = [aws_subnet.oai-subnet-mngt.id,aws_subnet.oai-subnet-data.id]
   associate_public_ip_address = true
   security_groups = [aws_security_group.oai-sg.id]
 
@@ -81,7 +88,7 @@ resource "aws_instance" "oai-instance_2" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-  subnet_id     = aws_subnet.oai-subnet.id
+  subnet_id     = [aws_subnet.oai-subnet-mngt.id,aws_subnet.oai-subnet-data.id]
   associate_public_ip_address = true
   security_groups = [aws_security_group.oai-sg.id]
 
