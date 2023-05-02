@@ -34,7 +34,7 @@ resource "aws_route" "internet_gateway" {
 }
 
 
-resource "aws_security_group" "oai-sg" {
+resource "aws_security_group" "oai_managmement_sg" {
   name_prefix = "${var.vpc_tag_name}-sg"
   vpc_id = aws_vpc.oai-vpc.id
 
@@ -54,14 +54,89 @@ resource "aws_security_group" "oai-sg" {
     description = "Allow all outbound traffic"
   }
 }
+resource "aws_security_group" "oai_data_sg" {
+  name_prefix = "${var.vpc_tag_name}-sg"
+  vpc_id = aws_vpc.oai-vpc.id
+
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all"
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all"
+  }
+}
+
+//
+// Resources for networking (interfaces) referenced in the Instances
+// eni1 (eth0) gets a public IP address ("Elastic IP")
+//
+
+resource "aws_network_interface" "instance_1_eni1" {
+  subnet_id = aws_subnet.oai-subnet-mngt.id
+  tags = {
+    Name = "instance_1_eni1"
+  }
+  security_groups = [aws_security_group.oai_managmement_sg.id]
+}
+resource "aws_network_interface" "instance_2_eni1" {
+  subnet_id = aws_subnet.oai-subnet-mngt.id
+  tags = {
+    Name = "instance_2_eni1"
+  }
+  security_groups = [aws_security_group.oai_managmement_sg.id]
+}
+resource "aws_eip" "eip_instance_1_eni1" {
+  vpc = true
+}
+resource "aws_eip" "eip_instance_2_eni1" {
+  vpc = true
+}
+resource "aws_eip_association" "eip_assoc1" {
+  network_interface_id = aws_network_interface.instance_1_eni1.id
+  allocation_id = aws_eip.eip_instance_1_eni1.id
+}
+resource "aws_eip_association" "eip_assoc2" {
+  network_interface_id = aws_network_interface.instance_2_eni1.id
+  allocation_id = aws_eip.eip_instance_2_eni1.id
+}
+
+resource "aws_network_interface" "instance_1_eni2" {
+  subnet_id = aws_subnet.oai-subnet-data.id
+  tags = {
+    Name = "instance_1_eni2"
+  }
+  security_groups = [aws_security_group.oai_data_sg.id]
+}
+resource "aws_network_interface" "instance_2_eni2" {
+  subnet_id = aws_subnet.oai-subnet-data.id
+  tags = {
+    Name = "instance_2_eni2"
+  }
+  security_groups = [aws_security_group.oai_data_sg.id]
+}
 
 resource "aws_instance" "oai-instance_1" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-  subnet_id     = [aws_subnet.oai-subnet-mngt.id,aws_subnet.oai-subnet-data.id]
-  associate_public_ip_address = true
-  security_groups = [aws_security_group.oai-sg.id]
+  network_interface {
+    device_index = 0
+    network_interface_id = aws_network_interface.instance_1_eni1.id
+  }
+
+  network_interface {
+    device_index = 1
+    network_interface_id = aws_network_interface.instance_1_eni2.id
+  }
 
   ebs_block_device {
     device_name = "/dev/sda1"
@@ -88,10 +163,16 @@ resource "aws_instance" "oai-instance_2" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-  subnet_id     = [aws_subnet.oai-subnet-mngt.id,aws_subnet.oai-subnet-data.id]
-  associate_public_ip_address = true
-  security_groups = [aws_security_group.oai-sg.id]
 
+  network_interface {
+    device_index = 0
+    network_interface_id = aws_network_interface.instance_2_eni1.id
+  }
+
+  network_interface {
+    device_index = 1
+    network_interface_id = aws_network_interface.instance_2_eni2.id
+  }
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_size = 16
@@ -111,4 +192,11 @@ resource "aws_instance" "oai-instance_2" {
   tags = {
     Name = "${var.server2_tag_name}"
   }
+}
+
+output "public_ip_instance1" {
+  value = aws_eip.eip_instance_1_eni1.public_ip
+}
+output "public_ip_instance2" {
+  value = aws_eip.eip_instance_2_eni1.public_ip
 }
