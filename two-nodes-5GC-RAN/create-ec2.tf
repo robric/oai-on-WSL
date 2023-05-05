@@ -111,6 +111,7 @@ resource "aws_eip_association" "eip_assoc2" {
 
 resource "aws_network_interface" "instance_1_eni2" {
   subnet_id = aws_subnet.oai-subnet-data.id
+  private_ips = ["10.0.2.10"]
   tags = {
     Name = "instance_1_eni2"
   }
@@ -118,6 +119,7 @@ resource "aws_network_interface" "instance_1_eni2" {
 }
 resource "aws_network_interface" "instance_2_eni2" {
   subnet_id = aws_subnet.oai-subnet-data.id
+  private_ips = ["10.0.2.20"]
   tags = {
     Name = "instance_2_eni2"
   }
@@ -128,6 +130,8 @@ resource "aws_instance" "oai-instance_1" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
+//  source_dest_check = false
+
   network_interface {
     device_index = 0
     network_interface_id = aws_network_interface.instance_1_eni1.id
@@ -163,6 +167,7 @@ resource "aws_instance" "oai-instance_2" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
+//  source_dest_check = false
 
   network_interface {
     device_index = 0
@@ -199,4 +204,10 @@ output "public_ip_instance1" {
 }
 output "public_ip_instance2" {
   value = aws_eip.eip_instance_2_eni1.public_ip
+}
+output "data_private_ip_instance1" {
+  value = aws_network_interface.instance_1_eni2.private_ips
+}
+output "data_private_ip_instance2" {
+  value = aws_network_interface.instance_2_eni2.private_ips
 }
