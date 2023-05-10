@@ -1,7 +1,7 @@
 # Generic steps for OAI Deployment
 
 ## Background
-Most information from this section is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links.
+Most information from this section is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links. 
 
 Each NF is associated with a values.yaml file which stores parameters for the deployment.
 Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
@@ -37,6 +37,8 @@ cate with amf
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "deploy-single-node.sh" executes the commands detailed below.
 
 - Deployment 5GC
+
+The below process deploys the master branch. Dev branch is available through "git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git". At time of writing, this branch has charts for ORAN gNB Split (CU-UP/CP and DU). 
 
 ```
 git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
