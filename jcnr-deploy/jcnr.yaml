@@ -1,0 +1,301 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: crpd
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+      - get
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: crpd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: crpd
+subjects:
+- kind: ServiceAccount
+  name: crpd
+  namespace: jcnr
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: crpd
+  namespace: jcnr
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-crpd-worker-ds
+  namespace: jcnr
+  labels:
+    k8s-app: kube-crpd-worker
+spec:
+  selector:
+    matchLabels:
+      name: kube-crpd-worker-ds
+  template:
+    metadata:
+      labels:
+        name: kube-crpd-worker-ds
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+                  - key: "node-role.kubernetes.io/master"
+                    operator: DoesNotExist
+                  - key: "node-role.kubernetes.io/control-plane"
+                    operator: DoesNotExist
+      hostNetwork: true
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      initContainers:
+        - name: install-cni
+          image: svl-artifactory.juniper.net/junos-docker-local/warthog/jcnr-cni:master-20230508-0c3bc11
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - name: cni
+            mountPath: /host
+          - name: jcnr-config
+            mountPath: /etc/jcnr
+          - name: node-config
+            mountPath: /etc/jcnr-node-config
+          - name: secrets
+            mountPath: /etc/secrets
+          - name: var-run
+            mountPath: /var/run
+          env:
+          # Mandatory variables
+          - name: NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: IS_MASTER
+            value: "False"
+          - name: CRPD_CONFIG_TEMPLATE
+            value: "/etc/jcnr/crpd-config.tmpl"
+          - name: PRIMARY_CNI
+            value: "False"
+          # Optional settings. Disable if not required
+          # - name: BGP_CONNECT_PORT
+          #   value: 178
+          # - name: BGP_LISTEN_PORT
+          #   value: 178
+          # Optional variables. Disable if not required
+          # - name: CNI_BIN_DIR
+          #   value: "/var/opt/cni/bin"
+          envFrom:
+            - configMapRef:
+                name: jcnr-node-config
+      containers:
+        - name: kube-crpd-worker
+          image: svl-artifactory.juniper.net/junos-docker-local/warthog/crpd:23.2I-20230502.0.2328
+          command: ["/bin/sh", "-c"]
+          args: ["/config/scripts/jcnr-pre-init.sh && exec /sbin/runit-init.sh"]
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/config/scripts/jcnr-post-init.sh"]
+          volumeMounts:
+            - name: conf
+              mountPath: /config
+            - name: var-run
+              mountPath: /var/run
+          securityContext:
+            privileged: true 
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_ADMIN
+          # Uncomment to enable remote logging
+          #env:
+          #   - name: SYSLOG_REMOTE_DEST
+          #     value: "@127.0.0.1:50055"
+          #     Uncomment to enable probes
+          #startupProbe:
+          #  exec:
+          #    command:
+          #    - /config/scripts/health-check.sh
+          #    - --startup
+              # Enable one or more below options
+              # depending on the deployment scenario
+              # - --bgp
+              # - --ldp
+              # - --mpls
+              # - --ospf
+              # - --isis
+              # - --vrouter
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 10
+          #livenessProbe:
+          #  exec:
+          #    command:
+          #    - /config/scripts/health-check.sh
+          #    - --liveness
+              # Enable one or more below options
+              # depending on the deployment scenario
+              # - --bgp
+              # - --ldp
+              # - --mpls
+              # - --ospf
+              # - --isis
+              # - --vrouter
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 10
+      volumes:
+        - name: cni
+          hostPath:
+            path: /
+        - name: conf
+          hostPath:
+            path: /etc/crpd
+        - name: jcnr-config
+          configMap:
+            name: jcnr-config
+        - name: node-config
+          configMap:
+            name: jcnr-node-config
+        - name: secrets
+          secret:
+            secretName: jcnr-secrets
+        - name: var-run
+          hostPath:
+            path: /var/run/crpd/
+      serviceAccountName: crpd
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-crpd-master-ds
+  namespace: jcnr
+  labels:
+    k8s-app: kube-crpd-master
+spec:
+  selector:
+    matchLabels:
+      name: kube-crpd-master-ds
+  template:
+    metadata:
+      labels:
+        name: kube-crpd-master-ds
+    spec:
+      hostNetwork: true
+      initContainers:
+        - name: install-cni
+          image: svl-artifactory.juniper.net/junos-docker-local/warthog/jcnr-cni:master-20230508-0c3bc11
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - name: cni
+            mountPath: /host
+          - name: jcnr-config
+            mountPath: /etc/jcnr
+          - name: node-config
+            mountPath: /etc/jcnr-node-config
+          - name: secrets
+            mountPath: /etc/secrets
+          - name: var-run
+            mountPath: /var/run
+          env:
+            # Mandatory variables
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: IS_MASTER
+              value: "True"
+            - name: CRPD_CONFIG_TEMPLATE
+              value: "/etc/jcnr/crpd-config.tmpl"
+            - name: PRIMARY_CNI
+              value: "False"
+          # Optional. Disable if not required
+          # - name: BGP_CONNECT_PORT
+          #   value: 178
+          # - name: BGP_LISTEN_PORT
+          #   value: 178
+          # Optional variables. Disable if not required
+          envFrom:
+            - configMapRef:
+                name: jcnr-node-config
+      containers:
+        - name: kube-crpd-master
+          image: svl-artifactory.juniper.net/junos-docker-local/warthog/crpd:23.2I-20230502.0.2328 
+          command: ["/bin/sh", "-c"]
+          args: ["/config/scripts/jcnr-pre-init.sh && exec /sbin/runit-init.sh"]
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/config/scripts/jcnr-post-init.sh"]
+          volumeMounts:
+            - name: conf
+              mountPath: /config
+            - name: var-run
+              mountPath: /var/run
+          securityContext:
+            privileged: true 
+            capabilities:
+              add: ["NET_ADMIN"]
+          #startupProbe:
+          #  exec:
+          #    command:
+          #    - /config/scripts/health-check.sh
+          #    - --startup
+              # Enable one or more below options
+              # depending on the deployment scenario
+              # - --bgp
+              # - --ldp
+              # - --mpls
+              # - --ospf
+              # - --isis
+              # - --vrouter
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 10
+          #livenessProbe:
+          #  exec:
+          #    command:
+          #    - /config/scripts/health-check.sh
+          #    - --liveness
+              # Enable one or more below options
+              # depending on the deployment scenario
+              # - --bgp
+              # - --ldp
+              # - --mpls
+              # - --ospf
+              # - --isis
+              # - --vrouter
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 10
+      volumes:
+        - name: cni
+          hostPath:
+            path: /
+        - name: conf
+          hostPath:
+            path: /etc/crpd
+        - name: jcnr-config
+          configMap:
+            name: jcnr-config
+        - name: node-config
+          configMap:
+            name: jcnr-node-config
+        - name: secrets
+          secret:
+            secretName: jcnr-secrets
+        - name: var-run
+          hostPath:
+            path: /var/run/crpd/
+      serviceAccountName: crpd

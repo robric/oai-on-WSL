@@ -1,0 +1,303 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jcnr-config
+  namespace: jcnr
+data:
+  # cRPD base config loaded during CNI installation
+  crpd-config.tmpl: |
+    # Initialize variables
+    # Default to using node IP address loopback address
+    # unless overriden via configmap or environment variable
+    # Also, default to using node IP for setting up BGP sessions
+    {{$IPv4LoopbackAddr := .NodeIP}}
+    {{$IsMasterNode := "False"}}
+    {{$IPv4DefaultGw := .IPv4DefaultGw}}
+    {{if .Env.ipv4LoopbackAddr}}
+        {{$IPv4LoopbackAddr = .Env.ipv4LoopbackAddr}}
+    {{end}}
+    {{$IPv6LoopbackAddr := .NodeIPv6}}
+    {{if .Env.ipv6LoopbackAddr}}
+        {{$IPv6LoopbackAddr = .Env.ipv6LoopbackAddr}}
+    {{end}}
+    {{$BGPIPv4Neighbor := .MasterNodeIP}}
+    {{if .Env.BGP_IPV4_NEIGHBOR}}
+        {{$BGPIPv4Neighbor = .Env.BGP_IPV4_NEIGHBOR}}
+    {{end}}
+    {{$BGPIPv6Neighbor := ""}}
+    {{if .Env.BGP_IPV6_NEIGHBOR}}
+        {{$BGPIPv6Neighbor = .Env.BGP_IPV6_NEIGHBOR}}
+    {{end}}
+    groups {
+        base {
+            apply-flags omit;
+            apply-macro ht {
+                jcnr;
+            }
+            system {
+                root-authentication {
+                    encrypted-password "{{.EncryptedPassword}}"; ## SECRET-DATA
+                }
+                {{if .LicenseKey}}
+                license {
+                    keys {
+                        key "{{.LicenseKey}}";
+                    }
+                }
+                {{end}}
+
+                {{if .Env.BGP_LISTEN_PORT}}
+                processes {
+                        routing {
+                                bgp tcp-listen-port {{.Env.BGP_LISTEN_PORT}};
+                        }
+                }
+                {{end}}
+            }
+            interfaces {
+                lo0 {
+                    unit 0 {
+    		        {{if .Node.isoLoopbackAddr}}
+                        family iso {
+                            address {{.Node.isoLoopbackAddr}};
+                        }
+    		        {{end}}
+                        family inet {
+                            address {{$IPv4LoopbackAddr}};
+                        }
+                        {{if $IPv6LoopbackAddr}}
+                        family inet6 {
+                            address {{$IPv6LoopbackAddr}};
+                        }
+                        {{end}}
+                    }
+                }
+            }
+            routing-options {
+               router-id {{$IPv4LoopbackAddr}}
+               route-distinguisher-id {{$IPv4LoopbackAddr}}
+               {{if $IPv4DefaultGw}}
+               static {
+                  route 0.0.0.0/0 next-hop {{$IPv4DefaultGw}};
+               }
+               {{end}}
+               forwarding-table {
+                  export no-install;
+                  channel vrouter {
+                      protocol {
+                          protocol-type gRPC;
+                          destination 127.0.0.1:50052;
+                      }
+                  }
+               }
+            }
+            protocols {
+                ospf {
+                   area 0.0.0.0 {
+                      interface all;
+                      interface lo0.0 {
+                         passive;
+                      }
+                   }
+                }
+                isis {
+                   interface all;
+                   {{if and .Env.SRGB_START_LABEL .Env.SRGB_INDEX_RANGE}}
+                   source-packet-routing {
+                       srgb start-label {{.Env.SRGB_START_LABEL}} index-range {{.Env.SRGB_INDEX_RANGE}};
+                       node-segment {
+                           {{if .Node.srIPv4NodeIndex}}
+                           ipv4-index {{.Node.srIPv4NodeIndex}};
+                           {{end}}
+                           {{if .Node.srIPv6NodeIndex}}
+                           ipv6-index {{.Node.srIPv6NodeIndex}};
+                           {{end}}
+                       }
+                   }
+                   {{end}}
+                   level 1 disable;
+                }
+                ldp {
+                    interface all;
+                }
+                mpls {
+                    interface all;
+                }
+            }
+            policy-options {
+                # policy to signal dynamic GRE tunnel attributes to BGP routes
+                policy-statement gre-export {
+                    then community add gre;
+                }
+                # policy to signal dynamic IPIP tunnel attributes to BGP routes
+                policy-statement ipip-export {
+                    then community add ipip;
+                }
+                # policy to signal dynamic UDP tunnel attributes to BGP routes
+                policy-statement udp-export {
+                    then community add udp;
+                }
+                community gre members encapsulation:0L:11;
+                community ipip members encapsulation:0L:7;
+                community udp members encapsulation:0L:13;
+                policy-statement no-install {
+                    from {
+                        route-filter 0.0.0.0/0 exact;
+                    }
+                    then reject;
+                }
+            }
+            {{if $IsMasterNode}}
+            protocols {
+                bgp {
+                    # Configure RR on master-node if the neighbor address matches local
+                    # (loopback or node) address
+                    {{if $BGPIPv4Neighbor}}
+                    {{if or (eq $BGPIPv4Neighbor .NodeIP) (eq $BGPIPv4Neighbor $IPv4LoopbackAddr)}}
+                    group CNI {
+                        {{if .Env.BGP_CONNECT_PORT}}
+                        tcp-connect-port {{.Env.BGP_CONNECT_PORT}};
+                        {{end}}
+                        type internal;
+                        local-address {{$BGPIPv4Neighbor}};
+                        cluster {{$IPv4LoopbackAddr}};
+                        local-as {{.Env.BGP_LOCAL_AS}};
+                        allow 0.0.0.0/0;
+                        family inet-vpn {
+                            unicast;
+                        }
+                        family inet6-vpn {
+                            unicast;
+                        }
+                        family evpn {
+                            signaling;
+                        }
+                    }
+                    {{end}}
+                    {{end}}
+                    {{if and $BGPIPv6Neighbor $IPv4LoopbackAddr}}
+                    {{if or (eq $BGPIPv6Neighbor .NodeIPv6) (eq $BGPIPv6Neighbor $IPv6LoopbackAddr)}}
+                    group CNIv6 {
+                        {{if .Env.BGP_CONNECT_PORT}}
+                        tcp-connect-port {{.Env.BGP_CONNECT_PORT}};
+                        {{end}}
+                        type internal;
+                        local-address {{$BGPIPv6Neighbor}};
+                        cluster {{$IPv4LoopbackAddr}};
+                        local-as {{.Env.BGP_LOCAL_AS}};
+                        allow ::/0;
+                        family inet-vpn {
+                            unicast extended-nexthop;
+                        }
+                        family inet6-vpn {
+                            unicast;
+                        }
+                        family evpn {
+                            signaling;
+                        }
+                    }
+                    {{end}}
+                    {{end}}
+                }
+            }
+            routing-options {
+                # Activate if using dynamic IP based tunnels for resolving next-hops
+                inactive: resolution {
+                    rib bgp.l3vpn.0 {
+                        resolution-ribs inet.0;
+                    }
+                }
+            }
+            {{else}}
+            protocols {
+                bgp {
+                    {{if $BGPIPv4Neighbor}}
+                    group CNI {
+                        type internal;
+                        inactive: vpn-apply-export;
+                        inactive: export udp-export;
+                        local-address {{$IPv4LoopbackAddr}};
+                        local-as {{.Env.BGP_LOCAL_AS}};
+                        neighbor {{$BGPIPv4Neighbor}};
+                        family inet-vpn {
+                            unicast;
+                        }
+                        family inet6-vpn {
+                            unicast;
+                        }
+                        family evpn {
+                            signaling;
+                        }
+                    }
+                    {{end}}
+                    {{if and $BGPIPv6Neighbor $IPv6LoopbackAddr}}
+                    group CNIv6 {
+                        type internal;
+                        local-address {{$IPv6LoopbackAddr}};
+                        local-as {{.Env.BGP_LOCAL_AS}};
+                        neighbor {{$BGPIPv6Neighbor}};
+                        family inet-vpn {
+                            unicast extended-nexthop;
+                        }
+                        family inet6-vpn {
+                            unicast;
+                        }
+                        family evpn {
+                            signaling;
+                        }
+                    }
+                    {{end}}
+                }
+            }
+            routing-options {
+                    inactive: dynamic-tunnels {
+                    inactive: gre next-hop-based-tunnel;
+                    dyn-tunnels {
+                        source-address {{$IPv4LoopbackAddr}};
+                        udp;
+                        destination-networks {
+                            # Try to setup dynamic tunnels with any peer
+                            # Replace with more specifc prefix ranges(s)
+                            0.0.0.0/0;
+                        }
+                    }
+                }
+            }
+            {{end}}
+        }
+        evpn-type5 {
+            apply-flags omit;
+            apply-macro ht {
+                jcnr;
+            }
+            routing-instances {
+                <*> {
+                    vrf-table-label;
+                    protocols {
+                         evpn {
+                              ip-prefix-routes {
+                                  advertise direct-nexthop;
+                              }
+                         }
+                    }
+                }
+            }
+        }
+        evpn-mac-vrf {
+            apply-flags omit;
+            apply-macro ht {
+                jcnr;
+            }
+            routing-instances {
+                <*> {
+                    vtep-source-interface lo0.0;
+                    protocols {
+                        evpn {
+                            default-gateway do-not-advertise;
+                        }
+                    }
+                }
+            }
+        }
+    }
+

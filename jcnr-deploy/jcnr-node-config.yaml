@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jcnr-node-config
+  namespace: jcnr
+data:
+  # Define environment variables that can be used by the JCNR CNI deployer
+  # in config template as ".Env.<var-name>" e.g {{.Env.BGP_IPV4_NEIGHBOR}}.
+  # Environment variables are global. i.e same across all nodes unless
+  # derived using metadata or downward APIs.
+  BGP_LOCAL_AS: "64512"
+  BGP_IPV4_NEIGHBOR: "100.1.1.0"
+  BGP_IPV6_NEIGHBOR: "abcd::100.1.1.0"
+  SRGB_START_LABEL: "400000"
+  SRGB_INDEX_RANGE: "4000"
+  # Define per node variables for use in config template. These are stored
+  # in JSON format and read from a file.
+  # Filename is of the format: node-<node-name>.json
+  # JCNR deployer on each node loads the corresponding JSON file and available
+  # as ".Node.<var-name>" for use in config template.
+  node-kind-control-plane.json: |
+    {
+      "ipv4LoopbackAddr":"100.1.1.0",
+      "ipv6LoopbackAddr":"abcd::100.1.1.0",
+      "isoLoopbackAddr":"49.0004.1000.0000.0000.00",
+      "srIPv4NodeIndex":"2000",
+      "srIPv6NodeIndex":"3000"
+    }
+  node-kind-worker.json: |
+    {
+      "ipv4LoopbackAddr":"100.1.1.1",
+      "ipv6LoopbackAddr":"abcd::100.1.1.1",
+      "isoLoopbackAddr":"49.0004.1000.0000.0001.00",
+      "srIPv4NodeIndex":"2001",
+      "srIPv6NodeIndex":"3001"
+    }
+  node-kind-worker2.json: |
+    {
+      "ipv4LoopbackAddr":"100.1.1.2",
+      "ipv6LoopbackAddr":"abcd::100.1.1.2",
+      "isoLoopbackAddr":"49.0004.1000.0000.0002.00",
+      "srIPv4NodeIndex":"2002",
+      "srIPv6NodeIndex":"3002"
+    }
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: params.jcnr.juniper.net
+spec:
+  group: jcnr.juniper.net
+  names:
+    kind: Parameter
+    singular: param
+    plural: params
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          params:
+            type: object
+            properties:
+              value:
+                type: string
+                # This annotation must be valid JSON.
+                format: json
