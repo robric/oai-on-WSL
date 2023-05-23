@@ -41,6 +41,7 @@ This is the simplest iteration with both 5GC and RAN running in a same Node/Clus
 The below process deploys the master branch. Dev branch is available through "git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git". At time of writing, this branch has charts for ORAN gNB Split (CU-UP/CP and DU). 
 
 ```
+### Dev branch: git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git
 git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
 cd oai-cn5g-fed/
 kubectl create ns oai-tutorial
