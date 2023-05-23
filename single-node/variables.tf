@@ -19,7 +19,8 @@ variable "server_tag_name" {
 }
 variable "ami_id" {
   description = "OAI-ready-to-use Ubuntu jammy image with minikube, OAI images, helm and charts"
-  default = "ami-0fb0fac0077bfb65c"
+//  default = "ami-0fb0fac0077bfb65c"
+  default = "ami-0aa2b7722dc1b5612"  
 }
 #
 # Credentials for ssh access to EC2 instances

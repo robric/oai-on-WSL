@@ -130,7 +130,7 @@ resource "aws_instance" "oai-instance_1" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-//  source_dest_check = false
+  source_dest_check = false
 
   network_interface {
     device_index = 0
@@ -147,17 +147,31 @@ resource "aws_instance" "oai-instance_1" {
     volume_size = 16
     volume_type = "gp2"
   }
- 
-  provisioner "file" {
-    source      = "${var.oai_deployment_file}"
-    destination = "oai-deployment.sh"
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("${var.private_key_file}")
-      host        = aws_instance.oai-instance_1.public_ip
-    }
-  }
+//  provisioner "file" {
+//    for_each =  { for index, file in var.file_provisioners_5GC:
+//    file.source => file
+//    }
+//    source     = each.value.source
+//    destination = each.value.destination
+//
+//    connection {
+//      user        = "ubuntu"
+//      private_key = file(var.private_key_file)
+//      host        = aws_instance.oai-instance_2.public_ip
+//    }
+//  }
+
+//  provisioner "file" {
+//    for_each = var.file_provisioners_5GC
+//    source     = each.value["source"]
+//    destination = each.value["destination"]
+//
+//    connection {
+//      user        = "ubuntu"
+//      private_key = file(var.private_key_file)
+//      host        = aws_instance.oai-instance_2.public_ip
+//    }
+//  }
   tags = {
     Name = "${var.server1_tag_name}"
   }
@@ -167,7 +181,7 @@ resource "aws_instance" "oai-instance_2" {
   ami           = "${var.ami_id}"
   instance_type = "${var.server_instance_type}"
   key_name      = "${var.key_name}"
-//  source_dest_check = false
+  source_dest_check = false
 
   network_interface {
     device_index = 0
@@ -183,12 +197,29 @@ resource "aws_instance" "oai-instance_2" {
     volume_size = 16
     volume_type = "gp2"
   }
- 
   provisioner "file" {
-    source      = "${var.oai_deployment_file}"
+    source      = "file1"
     destination = "oai-deployment.sh"
     connection {
-      type        = "ssh"
+//      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${var.private_key_file}")
+      host        = aws_instance.oai-instance_2.public_ip
+    }
+  }
+  provisioner "file" {
+    source      = "file2"
+    destination = "file2"
+    connection {
+      user        = "ubuntu"
+      private_key = file("${var.private_key_file}")
+      host        = aws_instance.oai-instance_2.public_ip
+    }
+  }
+  provisioner "file" {
+    source      = "file3"
+    destination = "file3"
+    connection {
       user        = "ubuntu"
       private_key = file("${var.private_key_file}")
       host        = aws_instance.oai-instance_2.public_ip

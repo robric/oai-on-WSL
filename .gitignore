@@ -2,7 +2,6 @@
 .terraform/*
 .terraform.lock.hcl
 single-node/*
-two-nodes-5GC-RAN/*
 !single-node/*.tf
 !single-node/*.sh
 !two-nodes-5GC-RAN/*.tf

@@ -87,27 +87,27 @@ resource "aws_instance" "rr-oai-test-instance" {
   
 //  depends_on = [null_resource.upload_script]
   
-  provisioner "file" {
-    source      = "${var.oai_deployment_file}"
-    destination = "oai-deployment.sh"
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("${var.private_key_file}")
-      host        = aws_instance.rr-oai-test-instance.public_ip
-    }
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "sleep 60", "sh oai-deployment.sh"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("${var.private_key_file}")
-      host        = aws_instance.rr-oai-test-instance.public_ip
-    }
-  }
+//  provisioner "file" {
+//    source      = "${var.oai_deployment_file}"
+//    destination = "oai-deployment.sh"
+//    connection {
+//      type        = "ssh"
+//      user        = "ubuntu"
+//      private_key = file("${var.private_key_file}")
+//      host        = aws_instance.rr-oai-test-instance.public_ip
+//    }
+//  }
+//  provisioner "remote-exec" {
+//    inline = [
+//      "sleep 60", "sh oai-deployment.sh"
+//    ]
+//    connection {
+//      type        = "ssh"
+//      user        = "ubuntu"
+//      private_key = file("${var.private_key_file}")
+//      host        = aws_instance.rr-oai-test-instance.public_ip
+//    }
+//  }
 
   tags = {
     Name = "${var.server_tag_name}"

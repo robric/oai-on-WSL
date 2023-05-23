@@ -2,6 +2,27 @@
 # provider variables: region, names, OAI ami
 # Make sure to modify generic tag name to avoid overlaps (use for vpc/subnet)
 #
+variable "file_provisioners_5GC" {
+  type = list(object({
+    source      = string
+    destination = string
+  }))
+  default = [
+    {
+      source      = "file1.txt"
+      destination = "/home/ubuntu/file1.txt"
+    },
+    {
+      source      = "file2.txt"
+      destination = "/home/ubuntu/file2.txt"
+    },
+    {
+      source      = "file3.txt"
+      destination = "/home/ubuntu/file3.txt"
+    }
+  ]
+}
+
 variable "vpc_tag_name" {
   description = "Generic VPC Tag Name used for vpc, subnet, igw"
   default = "rr-oai-2-nodes"
