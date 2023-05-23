@@ -1,6 +1,7 @@
 *.tfstate
 .terraform/*
 .terraform.lock.hcl
+jcnr-deploy/jcnr-secrets.yaml
 single-node/*
 !single-node/*.tf
 !single-node/*.sh
