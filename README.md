@@ -177,7 +177,7 @@ This iteration is more complex. We introduce two new dimensions:
 - Multus (network-attachment-defintion) with mac-vlan
 
 The charts to achieve this are in the split-gnb-multus-3l-charts.tgz file.
-Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made:
+Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made (changes are marked with --->):
 
 ```
 ############### charts/oai-5g-ran/oai-nr-ue/values.yaml:
@@ -193,8 +193,8 @@ multus:
 [...]
 config:
 [...]
-  f1duIpAddress: "status.podIP" ----> f1IfName: "eth0" ---> f1IfName: "net1"
-  f1duIpAddress: "172.21.6.100"
+  f1IfName: "eth0" ---> f1IfName: "net1"
+  f1duIpAddress: "status.podIP" ----> f1duIpAddress: "172.21.6.100"
 ```
 
 ```
