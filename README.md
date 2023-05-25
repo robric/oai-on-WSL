@@ -37,7 +37,7 @@ cate with amf
 
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "nf-tools.sh" permits to automate the deployment of these tasks.
 
-![image](https://github.com/robric/oai-testings/assets/21667569/fe93508c-a589-431e-b774-f9ad7d49d225)
+![image](https://github.com/robric/oai-testings/assets/21667569/69c3f9b0-24db-4cf8-9839-49f4d9de1ee5)
 
 - Deployment 5GC
 
