@@ -33,7 +33,7 @@ cate with amf
   f1duPort: "2153"
   useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
 ```
-## Single Cluster/Node - no multus -
+## Single Cluster/Node + Non-Split RAN + No multus -
 
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "nf-tools.sh" permits to automate the deployment of these tasks.
 
@@ -169,6 +169,39 @@ PING 12.1.1.100 (12.1.1.100) 56(84) bytes of data.
 64 bytes from 12.1.1.100: icmp_seq=1 ttl=64 time=220 ms
 64 bytes from 12.1.1.100: icmp_seq=2 ttl=64 time=350 ms
 64 bytes from 12.1.1.100: icmp_seq=3 ttl=64 time=245 ms
+```
+## Single Cluster/Node + Split GNB + Multus/mac-vlan
+
+This iteration is more complex. We introduce two new dimensions:
+- Split GNB: CU-CP, CU-UP, DU
+- Multus (network-attachment-defintion) with mac-vlan
+
+The charts to achieve this are in the split-gnb-multus-3l-charts.tgz file.
+Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made:
+
+```
+############### charts/oai-5g-ran/oai-nr-ue/values.yaml:
+ rfSimulator: "oai-gnb"   ---->  rfSimulator: "oai-gnb-du"
+ 
+############### charts/oai-5g-ran/oai-gnb-du/values.yaml
+
+multus:
+  # if default gatway is commented or left blank then it will be removed
+  defaultGateway: "172.21.7.254" ---> defaultGateway: "" 
+  f1Interface:
+    create: false ---> create: yes
+[...]
+config:
+[...]
+  f1duIpAddress: "status.podIP" ----> f1IfName: "eth0" ---> f1IfName: "net1"
+  f1duIpAddress: "172.21.6.100"
+```
+
+```
+cd oai-cn5g-fed/
+cd charts/oai-5g-core/oai-5g-basic
+helm dependency update
+helm spray --namespace oai .
 ```
 
 # OAI deployment in AWS
