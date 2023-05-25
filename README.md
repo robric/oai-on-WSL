@@ -40,7 +40,6 @@ This is the simplest iteration with both 5GC and RAN running in a same Node/Clus
 <p align="center">
   <img width="460" height="300" src="https://github.com/robric/oai-testings/assets/21667569/69c3f9b0-24db-4cf8-9839-49f4d9de1ee5">
 </p>
-![image](https://github.com/robric/oai-testings/assets/21667569/69c3f9b0-24db-4cf8-9839-49f4d9de1ee5)
 
 - Deployment 5GC
 
