@@ -37,6 +37,8 @@ cate with amf
 
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "nf-tools.sh" permits to automate the deployment of these tasks.
 
+![image](https://github.com/robric/oai-testings/assets/21667569/fe93508c-a589-431e-b774-f9ad7d49d225)
+
 - Deployment 5GC
 
 The below process deploys the master branch. Dev branch is available through "git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git". At time of writing, this branch has charts for ORAN gNB Split (CU-UP/CP and DU). 
