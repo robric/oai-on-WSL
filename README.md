@@ -1,10 +1,11 @@
 # Generic steps for OAI Deployment
 
 ## Background
-Most information from this section is derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links. 
 
-Each NF is associated with a values.yaml file which stores parameters for the deployment.
-Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
+Information from this readme can be derived from https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/docs/DEPLOY_SA5G_HC.md and links. 
+Deployments are based on helm.
+
+Each NF is associated with a charts/values.yaml. Notably, there is a "config:" section with Networking and RAN parameters such an in the below example for a DU (note that some of these parameters should be controllable via O1 overtime):
 
 ```
 config:
@@ -32,27 +33,26 @@ cate with amf
   f1duPort: "2153"
   useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
 ```
-## Single Cluster/Node
+## Single Cluster/Node - no multus -
 
-This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "deploy-single-node.sh" executes the commands detailed below.
+This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "nf-tools.sh" permits to automate the deployment of these tasks.
 
 - Deployment 5GC
 
 The below process deploys the master branch. Dev branch is available through "git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git". At time of writing, this branch has charts for ORAN gNB Split (CU-UP/CP and DU). 
 
 ```
-### Dev branch: git clone -b feat/helm-repo https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git
 git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed
 cd oai-cn5g-fed/
-kubectl create ns oai-tutorial
+kubectl create ns oai
 cd charts/oai-5g-core/oai-5g-basic
 helm dependency update
-helm spray --namespace oai-tutorial .
+helm spray --namespace oai .
 ```
 
 After some time you get the 5GC core pods running
 ```console
-ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai-tutorial
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai
 NAME                              READY   STATUS    RESTARTS      AGE
 mysql-795c8b8d7f-f6db8            1/1     Running   1 (28m ago)   85m
 oai-amf-6ccd8654d8-z7jkf          2/2     Running   5 (25m ago)   84m
@@ -65,10 +65,10 @@ oai-udr-5c9cb57dd7-gxq5s          2/2     Running   2 (28m ago)   85m
 ```
 Initialize a few env variables (Useful for Checking RAN)
 ```
-export AMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].metadata.name}")
-export SMF_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-smf" -o jsonpath="{.items[0].metadata.name}")
-export SPGWU_TINY_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-spgwu-tiny" -o jsonpath="{.items[0].metadata.name}")
-export AMF_eth0_POD_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].status.podIP}")
+export AMF_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].metadata.name}")
+export SMF_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-smf" -o jsonpath="{.items[0].metadata.name}")
+export SPGWU_TINY_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-spgwu-tiny" -o jsonpath="{.items[0].metadata.name}")
+export AMF_eth0_POD_IP=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-amf" -o jsonpath="{.items[0].status.podIP}")
 ```
 
 - Deployment 5GRAN
@@ -77,25 +77,25 @@ Just follow the steps below for the gNB Deployment
 
 ```
 cd ../../oai-5g-ran
-helm install gnb oai-gnb --namespace oai-tutorial
+helm install gnb oai-gnb --namespace oai
 ```
 When the pod is running, check that it works (you should see the 'Sending NG_SETUP_RESPONSE Ok' message from the log (last line)
 ```
-export GNB_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[0].metadata.name}")
-export GNB_eth0_IP=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[*].status.podIP}")
+export GNB_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[0].metadata.name}")
+export GNB_eth0_IP=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-gnb,app.kubernetes.io/instance=gnb" -o jsonpath="{.items[*].status.podIP}")
 
-kubectl logs -c amf $AMF_POD_NAME -n oai-tutorial | grep 'Sending NG_SETUP_RESPONSE Ok' 
+kubectl logs -c amf $AMF_POD_NAME -n oai | grep 'Sending NG_SETUP_RESPONSE Ok' 
 ```
 
 For UE emulation, again launch helm chart to deploy the UE emulation. 
 
 ```
-helm install nrue oai-nr-ue/ --namespace oai-tutorial
+helm install nrue oai-nr-ue/ --namespace oai
 ```
 After some time things should work, the last command gets you the UE IP address.
 
 ```console
-ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai-tutorial
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl get pods -n oai
 NAME                              READY   STATUS    RESTARTS      AGE
 mysql-795c8b8d7f-f6db8            1/1     Running   1 (43m ago)   100m
 oai-amf-6ccd8654d8-z7jkf          2/2     Running   5 (40m ago)   99m
@@ -108,9 +108,9 @@ oai-spgwu-tiny-78c7b4fc46-xwtxz   2/2     Running   0             39m
 oai-udm-96b854bf9-9d5mf           2/2     Running   4 (41m ago)   100m
 oai-udr-5c9cb57dd7-gxq5s          2/2     Running   2 (43m ago)   100m
 
-ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ export NR_UE_POD_NAME=$(kubectl get pods --namespace oai-tutorial -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ export NR_UE_POD_NAME=$(kubectl get pods --namespace oai -l "app.kubernetes.io/name=oai-nr-ue,app.kubernetes.io/instance=nrue" -o jsonpath="{.items[0].metadata.name}")
 
-ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai-tutorial -c nr-ue $NR_UE_POD_NAME -- if
+ubuntu@ip-10-0-1-57:~/oai-cn5g-fed/charts/oai-5g-ran$ kubectl exec -it -n oai -c nr-ue $NR_UE_POD_NAME -- if
 config oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
 12.1.1.100
 ```
@@ -126,7 +126,7 @@ PING e1824.dscb.akamaiedge.net (104.84.54.246) from 12.1.1.100 oaitun_ue1: 56(84
 64 bytes from a104-84-54-246.deploy.static.akamaitechnologies.com (104.84.54.246): icmp_seq=5 ttl=43 time=224 ms
 ```
 
-## Mod 1: add a second UE
+### Mod 1: add a second UE
 
 First, don't even think of increasing replicas in the deployment: you need to modify a key -unique per UE- 5G parameters (IMSI).
 In the sql db (https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed/-/blob/master/charts/oai-5g-core/mysql/initialization/oai_db-basic.sql), several IMSI are defined by default. A simple way is to copy the orginal charts and modify the values.
