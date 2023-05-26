@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hack-ip-link
+spec:
+  completions: 1
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+      - name: iproute2
+        image: kurtosistech/iproute2
+        command: ["/bin/sh", "-c"]
+        args: ["ip -o link show | grep vrf_blue | awk {'print '} | cut -d: -f1 | xargs -I {} ip link property add {} altname bingo"]
+        securityContext:
+          privileged: true
+      restartPolicy: Never
+  backoffLimit: 5
