@@ -36,10 +36,10 @@ cate with amf
 ## Node preparation
 
 Nodes for deployment are based on: 
-- ubuntu focal
-- kubernetes installation with multus/macvlan for advanced deployments
+- Ubuntu 20.04.5 LTS 
+- Kubernetes installation with multus/macvlan for advanced deployments
 - helm + helm spray
-- sctp must be running properly
+- SCTP is by default in Ubuntu 20.04.5 LTS (no sctp kernel module). If any doubt, check with the following utility: 
 ```
 sudo apt install lksctp-tools
 ```
