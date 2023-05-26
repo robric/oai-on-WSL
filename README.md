@@ -174,14 +174,64 @@ PING 12.1.1.100 (12.1.1.100) 56(84) bytes of data.
 
 This iteration is more complex. We introduce two new dimensions:
 - Split GNB: CU-CP, CU-UP, DU
-- Multus (network-attachment-defintion) with mac-vlan
+- Multus (network-attachment-defintion) with macvlan CNI. The enforcement of the Split GNB mandates the use of multus.
+
+Note the following points:
+- The OAI charts rely on macvlan in the NAD definition, so make sure macvlan is installed in the kubernetes clusters (this is usually located in /opt/cni/bin/).*
+- macvlan assumes a parent NIC for the configuration of the macvlan interfaces: in the default charts it is "bond0". You may change it based on the installation. It is possible to attach macvlan on a bridge, this is actually what is done for the AWS installation detailed in further section, since AWS does not allow any change on the NIC.
+- OAI permits to have separate NAD for 3GPP interfaces. This is the default charts configuration for cu-up/cu-cp with 3 networkattachmentdefitinion legs (e.g. e1/n2/f1-c for cu-cp). It is not straightforward to carry these 3GPP interfaces in a single nad due to overlapping port/address bindings.
+
+The following snipped show the configuration of a multus interface for CU-UP:
+```
+// values.yaml for charts: 
+multus:
+  #if defaultGateway is empty then it will be removed
+  defaultGateway: "172.21.7.254"
+  e1Interface:
+    create: true
+    IPadd: "172.21.6.91"
+    Netmask: "22"
+    # if gatway is empty then it will be removed
+    Gateway:
+    #routes: [{'dst': '10.8.0.0/24','gw': '172.21.7.254'}, {'dst': '10.9.0.0/24','gw': '172.21.7.254'}]
+    hostInterface: "bond0"      # Interface of the host machine on which this pod will be scheduled
+
+// resulting configuration NetworkAttachmentDefinition
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: oai-gnb-cu-up-net1
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master":"bond0",
+      "mode": "bridge",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+                {
+                        "address":"172.21.6.91/22"
+                }
+        ]
+      }
+    }'
+```
 
 The charts to achieve this are in the split-gnb-multus-3l-charts.tgz file.
 Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made (changes are marked with --->):
 
 ```
+############## Optional on all containers
+// It is very practical to have tcpdump installed (it also has additional tools such as ping). This directly controllable thanks to charts/the values.yaml. Toggle the value for includeTcpDumpContainer to "true".
+
+includeTcpDumpContainer: false #If true it will add a tcpdump container inside network function pod for debugging
+--->  includeTcpDumpContainer: true #If true it will add a tcpdump container inside network function pod for debugging
+
 ############### charts/oai-5g-ran/oai-nr-ue/values.yaml:
  rfSimulator: "oai-gnb"   ---->  rfSimulator: "oai-gnb-du"
+ useAdditionalOptions: "--sa -E --rfsim -r 106 --numerology 1 -C 3319680000 --nokrnmod --log_config.global_log_options level,nocolor,time"
+--->   useAdditionalOptions: "--sa --rfsim -r 106 --numerology 1 -C 3619200000 --nokrnmod --log_config.global_log_options level,nocolor,time"
  
 ############### charts/oai-5g-ran/oai-gnb-du/values.yaml
 
