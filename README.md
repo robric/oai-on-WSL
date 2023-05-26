@@ -223,7 +223,7 @@ The following diagrams depicts the deployment. For simplification a same IP LAN 
   <img width="460" height="300" src="https://github.com/robric/oai-testings/assets/21667569/34c6604a-6a6f-4204-b090-683397ff88ef">
 </p>
 
-Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made is these charts (changes are marked with --->):
+Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made (marked with --->):
 
 ```
 ############## Optional on all containers
@@ -249,14 +249,42 @@ config:
 [...]
   f1IfName: "eth0" ---> f1IfName: "net1"
   f1duIpAddress: "status.podIP" ----> f1duIpAddress: "172.21.6.100"
-```
+  
+############### charts/oai-5g-ran/oai-gnb-cu-up/values.yaml and charts/oai-5g-ran/oai-gnb-cu-cp/values.yaml
 
+// Toggle the default gateway to ""
+multus:
+  # if default gatway is empty then it will be removed
+  defaultGateway: "172.21.7.254" ---> defaultGateway: ""
+
+############### charts for core configuration (helm spray): charts/oai-5g-core/oai-5g-basic/values.yaml
+oai-amf:
+[...]
+  multus:
+    ## If you don't want to add a default route in your pod then leave this field empty
+    defaultGateway: "172.21.7.254"      ----> ""
+    n2Interface:
+      create: false                     ----> true
+      Ipadd: "172.21.6.94"
+[...]
+  config:
+[...]
+    amfInterfaceNameForNGAP: "eth0" # If oai-amf.multus.n2Interface.create is true then n2 else eth0
+            ---->  amfInterfaceNameForNGAP: "n2" # If oai-amf.multus.n2Interface.create is true then n2 else eth0
+    amfInterfaceNameForSBI: "eth0"  # Service based interface
+
+oai-spgwu-tiny:
+[...]
+  multus:
+    defaultGateway: "172.21.7.254"      ----> ""
+    n3Interface:
+      create: false                     ----> true
+[...]
+  config:
+    n3If: "eth0"  # n3 if multus.n3Interface.create is true
+            ---->  "n3"  # n3 if multus.n3Interface.create is true
 ```
-cd oai-cn5g-fed/
-cd charts/oai-5g-core/oai-5g-basic
-helm dependency update
-helm spray --namespace oai .
-```
+Deployment is identical as in previous section.
 
 # OAI deployment in AWS
 
