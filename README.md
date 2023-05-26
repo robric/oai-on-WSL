@@ -48,7 +48,7 @@ SCTP is by default in Ubuntu 20.04.5 LTS (no sctp kernel module)
 ubuntu@ip-172-31-23-42:~$ checksctp
 SCTP supported
 ubuntu@ip-172-31-23-42:~$
-``
+```
 
 ## Single Cluster/Node + Non-Split RAN + No multus -
 
