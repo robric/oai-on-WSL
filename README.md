@@ -33,6 +33,23 @@ cate with amf
   f1duPort: "2153"
   useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
 ```
+## Node preparation
+
+Nodes for deployment are based on: 
+- ubuntu focal
+- kubernetes installation with multus/macvlan for advanced deployments
+- helm + helm spray
+- sctp must be running properly
+```
+sudo apt install lksctp-tools
+```
+SCTP is by default in Ubuntu 20.04.5 LTS (no sctp kernel module)
+```console
+ubuntu@ip-172-31-23-42:~$ checksctp
+SCTP supported
+ubuntu@ip-172-31-23-42:~$
+``
+
 ## Single Cluster/Node + Non-Split RAN + No multus -
 
 This is the simplest iteration with both 5GC and RAN running in a same Node/Cluster. There is no need for customization of networking since this is self-contained (i.e. AMF IP automatically retrieved within the cluster). For conveniency, a script named "nf-tools.sh" permits to automate the deployment of these tasks.
@@ -217,7 +234,7 @@ spec:
       }
     }'
 ```
-The following diagrams depicts the deployment. For simplification a same IP LAN transports all interfaces (i.e. Layer 2 forwarding). The charts are in the split-gnb-multus-3l-charts.tgz file.
+The following diagrams depicts the deployment. For simplification a same IP LAN transports all interfaces (i.e. Layer 2 forwarding). The charts are in the split-gnb-multus3-1n-charts.tgz file.
 
 <p align="center">
   <img width="460" height="300" src="https://github.com/robric/oai-testings/assets/21667569/34c6604a-6a6f-4204-b090-683397ff88ef">
