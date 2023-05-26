@@ -181,7 +181,7 @@ Note the following points:
 - macvlan assumes a parent NIC for the configuration of the macvlan interfaces: in the default charts it is "bond0". You may change it based on the installation. It is possible to attach macvlan on a bridge, this is actually what is done for the AWS installation detailed in further section, since AWS does not allow any change on the NIC.
 - OAI permits to have separate NAD for 3GPP interfaces. This is the default charts configuration for cu-up/cu-cp with 3 networkattachmentdefitinion legs (e.g. e1/n2/f1-c for cu-cp). It is not straightforward to carry these 3GPP interfaces in a single nad due to overlapping port/address bindings.
 
-The following snipped show the configuration of a multus interface for CU-UP:
+The following snippet shows the configuration of a multus interface for CU-UP:
 ```
 // values.yaml for charts: 
 multus:
@@ -217,9 +217,13 @@ spec:
       }
     }'
 ```
+The following diagrams depicts the deployment. For simplification a same IP LAN transports all interfaces (i.e. Layer 2 forwarding). The charts are in the split-gnb-multus-3l-charts.tgz file.
 
-The charts to achieve this are in the split-gnb-multus-3l-charts.tgz file.
-Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made (changes are marked with --->):
+<p align="center">
+  <img width="460" height="300" src="https://github.com/robric/oai-testings/assets/21667569/34c6604a-6a6f-4204-b090-683397ff88ef">
+</p>
+
+Compared with the original clone from "git clone https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed", the following changes are made is these charts (changes are marked with --->):
 
 ```
 ############## Optional on all containers
