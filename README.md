@@ -301,7 +301,71 @@ oai-spgwu-tiny:
     n3If: "eth0"  # n3 if multus.n3Interface.create is true
             ---->  "n3"  # n3 if multus.n3Interface.create is true
 ```
-Deployment is identical as in previous section.
+
+### Deployment
+
+- Upload the file charts/split-gnb-multus3-1n-charts.tgz
+- Uncompress "tar xzf split-gnb-multus3-1n-charts.tgz"
+- Deploy as in previous section:
+```
+cd charts/oai-5g-core/oai-5g-basic/
+helm spray .
+cd ../../oai-5g-ran/
+helm install cucp oai-gnb-cu-cp/
+helm install cuup oai-gnb-cu-up/
+helm install du oai-gnb-du/
+helm install nrue oai-nr-ue/
+```
+
+### Output
+
+The following traces shows the deployment of multus interfaces (nad) and a view from a pod (cu-cp).
+
+```console
+ubuntu@ip-10-0-1-160:~/charts/oai-5g-ran$ kubectl get network-attachment-definitions.k8s.cni.cncf.io -o wide
+NAME                 AGE
+oai-amf-n2           21m
+oai-gnb-cu-cp-net1   7m54s
+oai-gnb-cu-cp-net2   7m54s
+oai-gnb-cu-cp-net3   7m54s
+oai-gnb-cu-up-net1   7m45s
+oai-gnb-cu-up-net2   7m45s
+oai-gnb-cu-up-net3   7m45s
+oai-gnb-du-net1      7m35s
+oai-spgwu-tiny-n3    21m
+
+ubuntu@ip-10-0-1-160:~/charts/oai-5g-ran$ kubectl exec -it oai-gnb-cu-cp-6cf9ddd899-crvgz -- ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0@if208: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8951 qdisc noqueue state UP group default
+    link/ether b2:8d:c9:37:36:3e brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.244.0.200/24 brd 10.244.0.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::b08d:c9ff:fe37:363e/64 scope link
+       valid_lft forever preferred_lft forever
+3: net1@if100: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether de:09:d1:1e:b8:98 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.21.6.90/22 brd 172.21.7.255 scope global net1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::dc09:d1ff:fe1e:b898/64 scope link
+       valid_lft forever preferred_lft forever
+4: net2@if100: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 42:ae:cc:4d:05:bf brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.21.6.98/22 brd 172.21.7.255 scope global net2
+       valid_lft forever preferred_lft forever
+    inet6 fe80::40ae:ccff:fe4d:5bf/64 scope link
+       valid_lft forever preferred_lft forever
+5: net3@if100: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 72:ff:40:f1:fc:29 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.21.6.92/22 brd 172.21.7.255 scope global net3
+       valid_lft forever preferred_lft forever
+    inet6 fe80::70ff:40ff:fef1:fc29/64 scope link
+       valid_lft forever preferred_lft forever
+```
 
 # OAI deployment in AWS
 
