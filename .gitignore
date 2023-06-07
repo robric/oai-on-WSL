@@ -2,6 +2,9 @@
 .terraform/*
 .terraform.lock.hcl
 jcnr-deploy/jcnr-secrets.yaml
+jcnr-deploy/jcnr-secrets.yaml.bak
+*/.terraform
+*/terraform*
 single-node/*
 !single-node/*.tf
 !single-node/*.sh

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hack-bridge-name
+  labels:
+    app: bridge-fix
+spec:
+  selector:
+    matchLabels:
+      app: alpine-script
+  template:
+    metadata:
+      labels:
+        app: alpine-script
+    spec:
+      hostNetwork: true
+      containers:
+      - name: alpine
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apk add --no-cache iproute2
+            while true; do
+              dev_list=$(ip -o link show |  grep "\: __crpd-brd" | grep -v "altname" |  awk -F': ' '{print $2}')
+              for dev in $dev_list; do
+                alias=$(ip -o link show $dev | awk -F 'alias' '{print $2}')
+                if [ -n "$alias" ]; then
+                  echo "Configuring interface $dev with altname $alias..."
+                  ip link property add $dev altname $alias
+                else
+                  echo "ERROR: interface $dev has no alias"
+                fi
+              done
+              sleep 60
+            done
+        securityContext:
+          privileged: true
